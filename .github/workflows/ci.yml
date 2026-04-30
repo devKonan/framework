@@ -26,11 +26,11 @@ jobs:
       - name: Installer les dépendances
         run: composer install --no-interaction --prefer-dist
 
-      - name: Vérifier la syntaxe — core
-        run: find core gbaka itineraire grenier tamtam djassa -name "*.php" -exec php -l {} \;
+      - name: Vérifier la syntaxe — framework
+        run: find foundation http routing database sms mail console -name "*.php" -exec php -l {} \;
 
-      - name: Vérifier la syntaxe — village
-        run: find village -name "*.php" -exec php -l {} \;
+      - name: Vérifier la syntaxe — app
+        run: find app -name "*.php" ! -path "app/views/*" ! -path "app/mails/*" -exec php -l {} \;
 
       - name: Test CLI help
         run: php briko help
