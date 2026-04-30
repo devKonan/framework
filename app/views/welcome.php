@@ -564,7 +564,7 @@ cd mon-app</div>
       <div class="code-block fade-in">
         <div class="code-header">
           <div class="code-dots"><span></span><span></span><span></span></div>
-          village/routes.php
+          app/routes.php
         </div>
         <pre><span class="cmt">// Routes dynamiques</span>
 <span class="var">$router</span><span class="op">-></span><span class="fn">get</span><span class="op">(</span><span class="str">'/users/{id}'</span><span class="op">,</span>

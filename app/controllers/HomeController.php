@@ -17,7 +17,7 @@ class HomeController
 
         ob_start();
         extract($data);
-        include base_path('village/views/welcome.php');
+        include base_path('app/views/welcome.php');
         $html = ob_get_clean();
 
         Response::html($html);

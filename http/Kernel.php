@@ -14,7 +14,7 @@ class Kernel
         $this->app    = $app;
         $this->router = new Router();
         $router       = $this->router;
-        require base_path('village/routes.php');
+        require base_path('app/routes.php');
     }
 
     public function handle(): void

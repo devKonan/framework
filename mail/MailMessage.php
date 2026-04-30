@@ -70,10 +70,10 @@ class MailMessage
         return $this;
     }
 
-    // Charge un template PHP depuis village/mails/
+    // Charge un template PHP depuis app/mails/
     public function view(string $template, array $data = []): static
     {
-        $file = base_path('village/mails/' . str_replace('.', '/', $template) . '.php');
+        $file = base_path('app/mails/' . str_replace('.', '/', $template) . '.php');
 
         if (!file_exists($file)) {
             throw new \RuntimeException("Template mail introuvable : $file");
