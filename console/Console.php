@@ -118,7 +118,7 @@ class Console
     private function makeController(string $name): void
     {
         $name = preg_replace('/[^A-Za-z0-9_]/', '', $name);
-        $path = __DIR__ . '/../village/controllers/' . $name . '.php';
+        $path = __DIR__ . '/../app/controllers/' . $name . '.php';
 
         if (file_exists($path)) {
             echo "⚠️  Controller déjà existant : $name\n";
@@ -158,7 +158,7 @@ class Console
             . "}\n";
 
         file_put_contents($path, $tpl);
-        echo "✅ Controller créé : village/controllers/$name.php\n";
+        echo "✅ Controller créé : app/controllers/$name.php\n";
     }
 
     private function makeModel(string $name): void
@@ -166,11 +166,11 @@ class Console
         $name  = preg_replace('/[^A-Za-z0-9_]/', '', $name);
         $table = strtolower($name) . 's';
 
-        if (!is_dir(__DIR__ . '/../village/models')) {
-            mkdir(__DIR__ . '/../village/models', 0755, true);
+        if (!is_dir(__DIR__ . '/../app/models')) {
+            mkdir(__DIR__ . '/../app/models', 0755, true);
         }
 
-        $path = __DIR__ . '/../village/models/' . $name . '.php';
+        $path = __DIR__ . '/../app/models/' . $name . '.php';
 
         if (file_exists($path)) {
             echo "⚠️  Model déjà existant : $name\n";
@@ -209,7 +209,7 @@ class Console
             . "}\n";
 
         file_put_contents($path, $tpl);
-        echo "✅ Model créé : village/models/$name.php\n";
+        echo "✅ Model créé : app/models/$name.php\n";
     }
 
     private function sync(): void
@@ -805,7 +805,7 @@ class Console
     private function makeMail(string $name): void
     {
         $name = preg_replace('/[^A-Za-z0-9_]/', '', $name);
-        $dir  = base_path('village/mailables');
+        $dir  = base_path('app/mailables');
         if (!is_dir($dir)) mkdir($dir, 0755, true);
 
         $path = $dir . '/' . $name . 'Mail.php';
@@ -835,17 +835,17 @@ class Console
         file_put_contents($path, $tpl);
 
         // Crée aussi le template vue
-        $tplDir  = base_path('village/mails');
+        $tplDir  = base_path('app/mails');
         $tplFile = $tplDir . '/' . strtolower($name) . '.php';
         if (!file_exists($tplFile)) {
             file_put_contents($tplFile,
                 "<!DOCTYPE html>\n<html><head><meta charset='UTF-8'><title>$name</title></head>\n"
                 . "<body>\n  <h1>$name</h1>\n  <p>Contenu de l'email...</p>\n</body>\n</html>\n"
             );
-            echo "✅ Template créé     : village/mails/" . strtolower($name) . ".php\n";
+            echo "✅ Template créé     : app/mails/" . strtolower($name) . ".php\n";
         }
 
-        echo "✅ Mailable créé     : village/mailables/{$name}Mail.php\n";
+        echo "✅ Mailable créé     : app/mailables/{$name}Mail.php\n";
         echo "\n  Utilisation :\n";
         echo "    Mail::send(new {$name}Mail(['email' => 'user@ci.ci']));\n\n";
     }
