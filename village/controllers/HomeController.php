@@ -2,20 +2,34 @@
 namespace Briko\village\controllers;
 
 use Briko\gbaka\Request;
+use Briko\gbaka\Response;
 
 class HomeController
 {
-    public function index(Request $request)
+    public function index(Request $request): void
     {
-        return "🔥 Brikocode v0.1 PRO OK";
+        $data = [
+            'appName' => env('APP_NAME', 'Brikocode'),
+            'appEnv'  => env('APP_ENV',  'local'),
+            'appUrl'  => env('APP_URL',  'http://localhost:8000'),
+            'version' => '0.1 PRO',
+        ];
+
+        ob_start();
+        extract($data);
+        include base_path('village/views/welcome.php');
+        $html = ob_get_clean();
+
+        Response::html($html);
     }
 
-    public function api(Request $request)
+    public function api(Request $request): array
     {
         return [
-            'status' => 'ok',
-            'app' => 'brikocode',
-            'version' => '0.1-pro'
+            'status'  => 'ok',
+            'app'     => env('APP_NAME', 'Brikocode'),
+            'version' => '0.1-pro',
+            'php'     => PHP_VERSION,
         ];
     }
 }

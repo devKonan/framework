@@ -21,7 +21,9 @@ class Kernel
     {
         $request  = Request::capture();
         $response = $this->dispatch($request);
-        Response::send($response);
+        if ($response !== null) {
+            Response::send($response);
+        }
     }
 
     // Dispatch sans passer par $_SERVER — utilisé par le CLI sync
