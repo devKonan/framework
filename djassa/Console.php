@@ -1,0 +1,431 @@
+<?php
+namespace Briko\djassa;
+
+class Console
+{
+    public function run(array $argv): void
+    {
+        $command = $argv[1] ?? 'help';
+
+        switch ($command) {
+            case 'feu':
+                $this->serve();
+                break;
+            case 'fabrique:controller':
+                $this->makeController($argv[2] ?? 'DemoController');
+                break;
+            case 'fabrique:model':
+                $this->makeModel($argv[2] ?? 'Demo');
+                break;
+            case 'sync':
+                $this->sync();
+                break;
+            case 'sync:status':
+                $this->syncStatus();
+                break;
+            case 'sync:flush':
+                $this->syncFlush();
+                break;
+            case 'logs':
+                $this->logs($argv[2] ?? null, (int) ($argv[3] ?? 50));
+                break;
+            case 'logs:tail':
+                $this->logsTail($argv[2] ?? null);
+                break;
+            case 'logs:clear':
+                $this->logsClear();
+                break;
+            case 'sms:test':
+                $this->smsTest($argv[2] ?? null, $argv[3] ?? 'Test Brikocode 🔥');
+                break;
+            case 'sms:driver':
+                $this->smsDriver();
+                break;
+            case 'sms:otp':
+                $this->smsOtp($argv[2] ?? null);
+                break;
+            case 'help':
+            default:
+                $this->help();
+        }
+    }
+
+    private function help(): void
+    {
+        echo "\n";
+        echo "  ╔══════════════════════════════════════╗\n";
+        echo "  ║     Brikocode CLI  — djassa 🔥       ║\n";
+        echo "  ╚══════════════════════════════════════╝\n\n";
+        echo "  Commandes disponibles :\n\n";
+        echo "    php briko feu                          Démarrer le serveur de dev\n";
+        echo "    php briko fabrique:controller <Nom>    Créer un controller\n";
+        echo "    php briko fabrique:model <Nom>         Créer un model\n\n";
+        echo "    php briko sync                         Rejouer les requêtes offline en attente\n";
+        echo "    php briko sync:status                  Voir les requêtes en file d'attente\n";
+        echo "    php briko sync:flush                   Vider la file d'attente offline\n\n";
+        echo "    php briko logs [canal] [n]             Afficher les N dernières lignes de log\n";
+        echo "    php briko logs:tail [canal]            Suivre les logs en temps réel\n";
+        echo "    php briko logs:clear                   Supprimer tous les fichiers de log\n\n";
+        echo "    php briko sms:test <numéro> [message]  Envoyer un SMS de test\n";
+        echo "    php briko sms:otp <numéro>             Générer et envoyer un OTP\n";
+        echo "    php briko sms:driver                   Voir le driver SMS actif\n\n";
+        echo "    php briko help                         Afficher cette aide\n\n";
+    }
+
+    private function serve(): void
+    {
+        $public = realpath(__DIR__ . '/../public');
+        echo "🔥 Brikocode — serveur lancé sur http://localhost:8000\n";
+        passthru('php -S localhost:8000 -t ' . escapeshellarg($public));
+    }
+
+    private function makeController(string $name): void
+    {
+        $name = preg_replace('/[^A-Za-z0-9_]/', '', $name);
+        $path = __DIR__ . '/../village/controllers/' . $name . '.php';
+
+        if (file_exists($path)) {
+            echo "⚠️  Controller déjà existant : $name\n";
+            return;
+        }
+
+        $tpl = '<?php' . "\n"
+            . 'namespace Briko\village\controllers;' . "\n\n"
+            . 'use Briko\gbaka\Request;' . "\n"
+            . 'use Briko\gbaka\Response;' . "\n\n"
+            . "class $name\n{\n"
+            . "    public function index(Request \$request): array\n"
+            . "    {\n"
+            . "        return ['message' => '$name opérationnel'];\n"
+            . "    }\n\n"
+            . "    public function show(Request \$request): array\n"
+            . "    {\n"
+            . "        \$id = \$request->param('id');\n"
+            . "        return ['id' => \$id];\n"
+            . "    }\n\n"
+            . "    public function store(Request \$request): array\n"
+            . "    {\n"
+            . "        \$data = \$request->all();\n"
+            . "        return ['created' => true, 'data' => \$data];\n"
+            . "    }\n\n"
+            . "    public function update(Request \$request): array\n"
+            . "    {\n"
+            . "        \$id   = \$request->param('id');\n"
+            . "        \$data = \$request->all();\n"
+            . "        return ['updated' => true, 'id' => \$id];\n"
+            . "    }\n\n"
+            . "    public function destroy(Request \$request): array\n"
+            . "    {\n"
+            . "        \$id = \$request->param('id');\n"
+            . "        return ['deleted' => true, 'id' => \$id];\n"
+            . "    }\n"
+            . "}\n";
+
+        file_put_contents($path, $tpl);
+        echo "✅ Controller créé : village/controllers/$name.php\n";
+    }
+
+    private function makeModel(string $name): void
+    {
+        $name  = preg_replace('/[^A-Za-z0-9_]/', '', $name);
+        $table = strtolower($name) . 's';
+
+        if (!is_dir(__DIR__ . '/../village/models')) {
+            mkdir(__DIR__ . '/../village/models', 0755, true);
+        }
+
+        $path = __DIR__ . '/../village/models/' . $name . '.php';
+
+        if (file_exists($path)) {
+            echo "⚠️  Model déjà existant : $name\n";
+            return;
+        }
+
+        $tpl = '<?php' . "\n"
+            . 'namespace Briko\village\models;' . "\n\n"
+            . 'use Briko\grenier\DB;' . "\n\n"
+            . "class $name\n{\n"
+            . "    protected static string \$table = '$table';\n\n"
+            . "    public static function all(): array\n"
+            . "    {\n"
+            . "        return DB::table(static::\$table)->get();\n"
+            . "    }\n\n"
+            . "    public static function find(int|string \$id): ?array\n"
+            . "    {\n"
+            . "        return DB::table(static::\$table)->find(\$id);\n"
+            . "    }\n\n"
+            . "    public static function where(string \$col, mixed \$val): array\n"
+            . "    {\n"
+            . "        return DB::table(static::\$table)->where(\$col, \$val)->get();\n"
+            . "    }\n\n"
+            . "    public static function create(array \$data): int|string\n"
+            . "    {\n"
+            . "        return DB::table(static::\$table)->insertGetId(\$data);\n"
+            . "    }\n\n"
+            . "    public static function update(int|string \$id, array \$data): int\n"
+            . "    {\n"
+            . "        return DB::table(static::\$table)->where('id', \$id)->update(\$data);\n"
+            . "    }\n\n"
+            . "    public static function delete(int|string \$id): int\n"
+            . "    {\n"
+            . "        return DB::table(static::\$table)->where('id', \$id)->delete();\n"
+            . "    }\n"
+            . "}\n";
+
+        file_put_contents($path, $tpl);
+        echo "✅ Model créé : village/models/$name.php\n";
+    }
+
+    private function sync(): void
+    {
+        $pending = \Briko\grenier\OfflineQueue::pending();
+
+        if (empty($pending)) {
+            echo "✅ Aucune requête en attente.\n";
+            return;
+        }
+
+        echo "🔄 Synchronisation de " . count($pending) . " requête(s) en attente...\n\n";
+
+        $app    = new \Briko\core\App();
+        $kernel = new \Briko\gbaka\Kernel($app);
+
+        $done = $fail = 0;
+        foreach ($pending as $item) {
+            echo "  → [{$item['method']}] {$item['uri']} (id: {$item['id']})... ";
+            try {
+                $req      = \Briko\gbaka\Request::fromArray($item['method'], $item['uri'], $item['payload']);
+                $response = $kernel->dispatch($req);
+
+                if (isset($response['error'])) {
+                    throw new \RuntimeException($response['error']);
+                }
+
+                \Briko\grenier\OfflineQueue::markDone($item['id']);
+                echo "✅ OK\n";
+                $done++;
+            } catch (\Throwable $e) {
+                \Briko\grenier\OfflineQueue::markFailed($item['id'], $e->getMessage());
+                echo "❌ Échec : {$e->getMessage()}\n";
+                $fail++;
+            }
+        }
+
+        echo "\n  Résultat : $done synchronisée(s), $fail échouée(s).\n";
+    }
+
+    private function syncStatus(): void
+    {
+        $all     = \Briko\grenier\OfflineQueue::all();
+        $pending = array_filter($all, fn ($i) => $i['status'] === 'pending');
+        $done    = array_filter($all, fn ($i) => $i['status'] === 'done');
+        $failed  = array_filter($all, fn ($i) => $i['status'] === 'failed');
+        $cache   = \Briko\grenier\ResponseCache::stats();
+
+        echo "\n  📦 File d'attente offline\n";
+        echo "  ─────────────────────────\n";
+        echo "  En attente  : " . count($pending) . "\n";
+        echo "  Synchronisé : " . count($done) . "\n";
+        echo "  Échoué      : " . count($failed) . "\n\n";
+
+        if (!empty($pending)) {
+            echo "  Détail des requêtes en attente :\n";
+            foreach ($pending as $item) {
+                echo "    [{$item['method']}] {$item['uri']} — enfilée le {$item['queued_at']}\n";
+            }
+            echo "\n";
+        }
+
+        echo "  🗂  Cache réponses : {$cache['entries']} entrée(s) ({$cache['size_kb']} KB)\n\n";
+    }
+
+    private function syncFlush(): void
+    {
+        \Briko\grenier\OfflineQueue::flush();
+        echo "🗑  File d'attente offline vidée.\n";
+    }
+
+    // ─── Logs ─────────────────────────────────────────────────────────────────
+
+    private function logs(?string $channel, int $lines = 50): void
+    {
+        $file = $this->resolveLogFile($channel);
+        if (!$file) {
+            echo "  Aucun fichier de log trouvé pour aujourd'hui.\n";
+            return;
+        }
+
+        $entries = $this->readLastLines($file, $lines);
+        if (empty($entries)) {
+            echo "  Aucune entrée dans ce fichier.\n";
+            return;
+        }
+
+        echo "\n  📋 " . basename($file) . " — {$lines} dernières lignes\n";
+        echo "  " . str_repeat('─', 70) . "\n\n";
+
+        foreach ($entries as $raw) {
+            $entry = json_decode($raw, true);
+            if (!$entry) continue;
+
+            $color   = $this->levelColor($entry['level'] ?? 'INFO');
+            $reset   = "\033[0m";
+            $dim     = "\033[2m";
+            $level   = str_pad($entry['level'] ?? '?', 8);
+            $channel = str_pad($entry['channel'] ?? 'app', 8);
+            $ts      = substr($entry['ts'] ?? '', 11, 8); // HH:MM:SS
+            $msg     = $entry['message'] ?? '';
+            $ms      = $entry['elapsed_ms'] ?? '';
+            $rid     = $entry['request_id'] ?? '';
+            $mem     = $entry['memory_kb'] ?? '';
+
+            echo "  {$dim}{$ts}{$reset} {$color}{$level}{$reset} {$dim}[{$channel}]{$reset}  {$msg}";
+            echo $ms ? "  {$dim}+{$ms}ms{$reset}" : '';
+            echo $mem ? "  {$dim}{$mem}KB{$reset}" : '';
+            echo "\n";
+
+            if (!empty($entry['context'])) {
+                foreach ($entry['context'] as $k => $v) {
+                    $val = is_array($v) ? json_encode($v, JSON_UNESCAPED_UNICODE) : $v;
+                    echo "    {$dim}  {$k}: {$val}{$reset}\n";
+                }
+            }
+        }
+        echo "\n";
+    }
+
+    private function logsTail(?string $channel): void
+    {
+        $file = $this->resolveLogFile($channel);
+        if (!$file) {
+            echo "  Aucun fichier de log trouvé. En attente de nouveaux logs...\n";
+            $file = base_path('storage/logs/' . date('Y-m-d') . ($channel ? "-$channel" : '') . '.log');
+        }
+
+        echo "  🔍 Suivi de " . basename($file) . " (Ctrl+C pour arrêter)\n\n";
+        passthru('tail -f ' . escapeshellarg($file));
+    }
+
+    private function logsClear(): void
+    {
+        $dir   = base_path('storage/logs');
+        $files = glob($dir . '/*.log') ?: [];
+        foreach ($files as $f) unlink($f);
+        echo "🗑  " . count($files) . " fichier(s) de log supprimé(s).\n";
+    }
+
+    private function resolveLogFile(?string $channel): ?string
+    {
+        $dir    = base_path('storage/logs');
+        $prefix = date('Y-m-d') . ($channel ? "-$channel" : '');
+        $file   = $dir . '/' . $prefix . '.log';
+        if (file_exists($file)) return $file;
+
+        // Cherche le dernier fichier dispo
+        $candidates = glob($dir . '/' . date('Y-m-d') . '*.log') ?: [];
+        if (empty($candidates)) {
+            $candidates = glob($dir . '/*.log') ?: [];
+        }
+        if (empty($candidates)) return null;
+
+        usort($candidates, fn ($a, $b) => filemtime($b) - filemtime($a));
+        return $candidates[0];
+    }
+
+    private function readLastLines(string $file, int $n): array
+    {
+        $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
+        return array_slice($lines, -$n);
+    }
+
+    private function levelColor(string $level): string
+    {
+        return match ($level) {
+            'DEBUG'    => "\033[2;37m",
+            'INFO'     => "\033[0;32m",
+            'WARNING'  => "\033[0;33m",
+            'ERROR'    => "\033[0;31m",
+            'CRITICAL' => "\033[1;31m",
+            default    => "\033[0m",
+        };
+    }
+
+    // ─── SMS ──────────────────────────────────────────────────────────────────
+
+    private function smsTest(?string $phone, string $message): void
+    {
+        if (!$phone) {
+            echo "  Usage : php briko sms:test <+2250700000000> [message]\n";
+            return;
+        }
+
+        new \Briko\core\App();
+
+        echo "\n  📱 Envoi SMS de test...\n";
+        $result = \Briko\tamtam\SMS::to($phone)->send($message);
+
+        if ($result->isOk()) {
+            echo "  ✅ SMS envoyé vers $phone\n";
+            echo "     Driver : " . env('SMS_DRIVER', 'log') . "\n";
+            if ($result->messageId) echo "     ID     : {$result->messageId}\n";
+        } else {
+            echo "  ❌ Échec : {$result->info}\n";
+        }
+        echo "\n";
+    }
+
+    private function smsOtp(?string $phone): void
+    {
+        if (!$phone) {
+            echo "  Usage : php briko sms:otp <+2250700000000>\n";
+            return;
+        }
+
+        new \Briko\core\App();
+
+        echo "\n  🔑 Génération OTP pour $phone...\n";
+        $code = \Briko\tamtam\SMS::otp($phone);
+
+        echo "  ✅ OTP généré et envoyé\n";
+        echo "     Code   : $code  (valide 5 minutes)\n";
+        echo "     Driver : " . env('SMS_DRIVER', 'log') . "\n\n";
+        echo "  Vérification :\n";
+        echo "    \$ok = SMS::verifyOtp('$phone', '$code'); // true\n\n";
+    }
+
+    private function smsDriver(): void
+    {
+        new \Briko\core\App();
+
+        $driver = env('SMS_DRIVER', 'log');
+        $from   = env('SMS_FROM', 'Brikocode');
+
+        echo "\n  📡 Driver SMS actif : $driver\n";
+        echo "  Expéditeur par défaut : $from\n\n";
+
+        $details = match ($driver) {
+            'africastalking' => [
+                'Username'  => env('AT_USERNAME', '—'),
+                'API Key'   => env('AT_API_KEY')   ? '✅ défini' : '❌ manquant (AT_API_KEY)',
+                'Sandbox'   => env('AT_SANDBOX', 'true') === 'true' ? '✅ oui' : 'non',
+            ],
+            'twilio' => [
+                'SID'   => env('TWILIO_SID')   ? '✅ défini' : '❌ manquant (TWILIO_SID)',
+                'Token' => env('TWILIO_TOKEN') ? '✅ défini' : '❌ manquant (TWILIO_TOKEN)',
+                'From'  => env('TWILIO_FROM')  ? env('TWILIO_FROM') : '❌ manquant (TWILIO_FROM)',
+            ],
+            'http' => [
+                'URL'          => env('SMS_HTTP_URL', '❌ manquant'),
+                'Auth field'   => env('SMS_HTTP_AUTH_FIELD', 'apikey'),
+                'Auth value'   => env('SMS_HTTP_AUTH_VALUE') ? '✅ défini' : '— non défini',
+                'Success code' => env('SMS_HTTP_SUCCESS_CODE', '200'),
+            ],
+            default => ['Mode' => 'log — SMS affichés dans les logs, rien envoyé'],
+        };
+
+        foreach ($details as $k => $v) {
+            echo "    $k : $v\n";
+        }
+        echo "\n";
+    }
+}

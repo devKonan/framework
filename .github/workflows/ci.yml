@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  syntax:
+    name: Vérification syntaxe PHP
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        php: ["8.1", "8.2", "8.3"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+
+      - name: Installer les dépendances
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Vérifier la syntaxe — core
+        run: find core gbaka itineraire grenier tamtam djassa -name "*.php" -exec php -l {} \;
+
+      - name: Vérifier la syntaxe — village
+        run: find village -name "*.php" -exec php -l {} \;
+
+      - name: Test CLI help
+        run: php briko help
+
+      - name: Test CLI sms:driver
+        run: php briko sms:driver
+
+      - name: Test CLI sync:status
+        run: php briko sync:status
