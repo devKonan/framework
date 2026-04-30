@@ -46,3 +46,19 @@ if (!function_exists('base_path')) {
         return $path ? $base . DIRECTORY_SEPARATOR . ltrim($path, '/\\') : $base;
     }
 }
+
+if (!function_exists('view')) {
+    function view(string $template, array $data = []): string
+    {
+        $file = base_path('app/views/' . str_replace('.', '/', $template) . '.php');
+
+        if (!file_exists($file)) {
+            throw new \RuntimeException("Vue introuvable : {$file}");
+        }
+
+        extract($data, EXTR_SKIP);
+        ob_start();
+        include $file;
+        return ob_get_clean();
+    }
+}

@@ -267,6 +267,7 @@ td code{font-size:.78rem}
     <a href="#" data-section="routing">Routing</a>
     <a href="#" data-section="request">Request</a>
     <a href="#" data-section="response">Response</a>
+    <a href="#" data-section="views">Vues (view)</a>
     <a href="#" data-section="middleware">Middleware</a>
   </div>
 
@@ -750,6 +751,141 @@ Response::html($html, 200);</code></pre>
       <span class="pn-label">← Précédent</span>
       <span class="pn-title">Request</span>
     </a>
+    <a href="#" class="pn-next" onclick="nav('views');return false">
+      <span class="pn-label">Suivant →</span>
+      <span class="pn-title">Vues (view)</span>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════ VIEWS ═══════════════════════ -->
+<section class="doc-section" id="sec-views">
+  <div class="breadcrumb">Docs <span>›</span> Vues</div>
+  <span class="section-badge">HTTP</span>
+  <h1>Vues — <code>view()</code></h1>
+  <p class="lead">Le helper <code>view()</code> charge un template PHP depuis <code>app/views/</code>, injecte des variables et retourne le HTML généré.</p>
+
+  <div class="callout callout-info">
+    <strong>Différence avec le mail <code>->view()</code> :</strong><br>
+    <code>view('page', $data)</code> → charge depuis <code>app/views/</code> (pages HTML)<br>
+    <code>mail_to(...)->view('email', $data)</code> → charge depuis <code>app/mails/</code> (templates email)
+  </div>
+
+  <h2>Utilisation de base</h2>
+  <div class="code-label"><span>app/controllers/HomeController.php</span></div>
+  <pre><code class="language-php">&lt;?php
+namespace App\Controllers;
+
+use Briko\Http\Request;
+use Briko\Http\Response;
+
+class HomeController
+{
+    public function index(Request $request): void
+    {
+        Response::html(view('accueil', [
+            'titre'     => 'Bienvenue',
+            'user'      => ['nom' => 'Aya'],
+        ]));
+    }
+}</code></pre>
+
+  <div class="code-label"><span>app/views/accueil.php</span></div>
+  <pre><code class="language-php">&lt;!DOCTYPE html&gt;
+&lt;html lang="fr"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;&lt;?= htmlspecialchars($titre) ?&gt;&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;&lt;?= htmlspecialchars($titre) ?&gt;&lt;/h1&gt;
+  &lt;p&gt;Bonjour, &lt;?= htmlspecialchars($user['nom']) ?&gt; !&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+  <h2>Vues imbriquées (layouts)</h2>
+  <p>Tu peux composer tes vues avec des includes PHP.</p>
+
+  <div class="code-label"><span>app/views/layout.php</span></div>
+  <pre><code class="language-php">&lt;!DOCTYPE html&gt;
+&lt;html lang="fr"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;&lt;?= htmlspecialchars($titre ?? env('APP_NAME')) ?&gt;&lt;/title&gt;
+  &lt;link rel="stylesheet" href="/style.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;nav&gt;...navigation...&lt;/nav&gt;
+  &lt;main&gt;
+    &lt;?= $slot ?? '' ?&gt;
+  &lt;/main&gt;
+  &lt;footer&gt;© &lt;?= date('Y') ?&gt; &lt;?= env('APP_NAME') ?&gt;&lt;/footer&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+  <div class="code-label"><span>app/views/dashboard.php</span></div>
+  <pre><code class="language-php">&lt;?php
+// Capture le contenu de la page
+ob_start();
+?&gt;
+  &lt;h1&gt;Tableau de bord&lt;/h1&gt;
+  &lt;p&gt;Bienvenue, &lt;?= htmlspecialchars($user['nom']) ?&gt;&lt;/p&gt;
+&lt;?php
+$slot = ob_get_clean();
+
+// Inclure le layout
+include base_path('app/views/layout.php');
+?&gt;</code></pre>
+
+  <h2>Convention de nommage</h2>
+  <p>Le helper <code>view()</code> supporte les points comme séparateurs de dossier :</p>
+  <div class="code-label"><span>PHP</span></div>
+  <pre><code class="language-php">// Charge app/views/admin/users.php
+view('admin.users', ['users' => $users]);
+
+// Charge app/views/auth/login.php
+view('auth.login');
+
+// Charge app/views/accueil.php
+view('accueil', ['titre' => 'Page d\'accueil']);</code></pre>
+
+  <h2>Retourner vs afficher directement</h2>
+  <div class="code-label"><span>PHP</span></div>
+  <pre><code class="language-php">// view() retourne le HTML sous forme de string
+$html = view('page', $data);
+
+// Response::html() envoie avec le bon Content-Type
+Response::html(view('page', $data));
+
+// Si ton controller retourne void, appelle Response::html()
+public function show(Request $request): void
+{
+    $produit = db('produits')->findOrFail($request->param('id'));
+    Response::html(view('produits.detail', ['produit' => $produit]));
+}</code></pre>
+
+  <h2>Accès aux helpers dans les vues</h2>
+  <p>Tous les helpers globaux sont disponibles directement dans les fichiers <code>.php</code> de vues :</p>
+  <div class="code-label"><span>app/views/accueil.php</span></div>
+  <pre><code class="language-php">&lt;!-- env() disponible dans les vues --&gt;
+&lt;title&gt;&lt;?= htmlspecialchars(env('APP_NAME')) ?&gt;&lt;/title&gt;
+
+&lt;!-- base_path() pour les assets --&gt;
+&lt;img src="&lt;?= env('APP_URL') ?&gt;/logo.png"&gt;
+
+&lt;!-- db() directement dans la vue (déconseillé, préfère passer les données du controller) --&gt;
+&lt;?php $stats = db('users')->count(); ?&gt;
+&lt;p&gt;&lt;?= $stats ?&gt; utilisateurs inscrits&lt;/p&gt;</code></pre>
+
+  <div class="callout callout-tip">
+    <strong>Bonne pratique :</strong> charge tes données dans le controller et passe-les en paramètres à <code>view()</code>. Évite les requêtes DB directement dans les vues pour garder ton code maintenable.
+  </div>
+
+  <div class="page-nav">
+    <a href="#" onclick="nav('response');return false">
+      <span class="pn-label">← Précédent</span>
+      <span class="pn-title">Response</span>
+    </a>
     <a href="#" class="pn-next" onclick="nav('middleware');return false">
       <span class="pn-label">Suivant →</span>
       <span class="pn-title">Middleware</span>
@@ -810,9 +946,9 @@ $router->get('/admin/users', [AdminController::class, 'index'], [
 ]);</code></pre>
 
   <div class="page-nav">
-    <a href="#" onclick="nav('response');return false">
+    <a href="#" onclick="nav('views');return false">
       <span class="pn-label">← Précédent</span>
-      <span class="pn-title">Response</span>
+      <span class="pn-title">Vues (view)</span>
     </a>
     <a href="#" class="pn-next" onclick="nav('querybuilder');return false">
       <span class="pn-label">Suivant →</span>
@@ -1413,6 +1549,7 @@ php briko sync:flush     # Vider la file d'attente</code></pre>
       <tr><td><code>db($table)</code></td><td>Query Builder sur une table</td><td><code>db('users')->get()</code></td></tr>
       <tr><td><code>sms($to)</code></td><td>Créer un message SMS</td><td><code>sms('+225...')->message('...')</code></td></tr>
       <tr><td><code>mail_to($email)</code></td><td>Créer un message Mail</td><td><code>mail_to('a@b.ci')->subject('...')</code></td></tr>
+      <tr><td><code>view($template, $data)</code></td><td>Rendre un template depuis <code>app/views/</code></td><td><code>view('accueil', ['titre' => 'Home'])</code></td></tr>
       <tr><td><code>logger($msg, $ctx, $level)</code></td><td>Écrire un log</td><td><code>logger('Erreur', [], 'error')</code></td></tr>
       <tr><td><code>base_path($path)</code></td><td>Chemin absolu depuis la racine</td><td><code>base_path('storage/file.pdf')</code></td></tr>
     </tbody>

@@ -8,19 +8,12 @@ class HomeController
 {
     public function index(Request $request): void
     {
-        $data = [
+        Response::html(view('welcome', [
             'appName' => env('APP_NAME', 'Brikocode'),
             'appEnv'  => env('APP_ENV',  'local'),
             'appUrl'  => env('APP_URL',  'http://localhost:8000'),
-            'version' => '0.1 PRO',
-        ];
-
-        ob_start();
-        extract($data);
-        include base_path('app/views/welcome.php');
-        $html = ob_get_clean();
-
-        Response::html($html);
+            'version' => '0.2',
+        ]));
     }
 
     public function api(Request $request): array
