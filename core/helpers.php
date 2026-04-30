@@ -25,6 +25,13 @@ if (!function_exists('sms')) {
     }
 }
 
+if (!function_exists('mail_to')) {
+    function mail_to(string|array $address): \Briko\courrier\MailMessage
+    {
+        return \Briko\courrier\Mail::to($address);
+    }
+}
+
 if (!function_exists('logger')) {
     function logger(string $message, array $context = [], string $level = 'info'): void
     {

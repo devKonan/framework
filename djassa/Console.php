@@ -60,6 +60,15 @@ class Console
             case 'sms:otp':
                 $this->smsOtp($argv[2] ?? null);
                 break;
+            case 'mail:test':
+                $this->mailTest($argv[2] ?? null);
+                break;
+            case 'mail:driver':
+                $this->mailDriver();
+                break;
+            case 'fabrique:mail':
+                $this->makeMail($argv[2] ?? 'Welcome');
+                break;
             case 'help':
             default:
                 $this->help();
@@ -89,6 +98,9 @@ class Console
         echo "    php briko sms:test <numéro> [message]  Envoyer un SMS de test\n";
         echo "    php briko sms:otp <numéro>             Générer et envoyer un OTP\n";
         echo "    php briko sms:driver                   Voir le driver SMS actif\n\n";
+        echo "    php briko mail:test <email>            Envoyer un email de test\n";
+        echo "    php briko mail:driver                  Voir le driver Mail actif\n";
+        echo "    php briko fabrique:mail <Nom>          Créer un Mailable\n\n";
         echo "    php briko help                         Afficher cette aide\n\n";
     }
 
@@ -718,5 +730,119 @@ class Console
             echo "    $k : $v\n";
         }
         echo "\n";
+    }
+
+    // ─── Mail ─────────────────────────────────────────────────────────────────
+
+    private function mailTest(?string $email): void
+    {
+        if (!$email) {
+            echo "  Usage : php briko mail:test <email@domaine.ci>\n";
+            return;
+        }
+
+        new \Briko\core\App();
+
+        $appName = env('APP_NAME', 'Brikocode');
+        echo "\n  ✉️  Envoi email de test vers $email...\n";
+
+        $result = \Briko\courrier\Mail::to($email)
+            ->subject("Test email — $appName")
+            ->html("<h2>🔥 $appName fonctionne !</h2><p>Ce message confirme que le driver <strong>" . env('MAIL_DRIVER', 'log') . "</strong> est correctement configuré.</p>")
+            ->text("$appName fonctionne ! Driver : " . env('MAIL_DRIVER', 'log'))
+            ->send();
+
+        if ($result->isOk()) {
+            echo "  ✅ Email envoyé\n";
+            echo "     Driver : " . env('MAIL_DRIVER', 'log') . "\n";
+            if ($result->messageId) echo "     ID     : {$result->messageId}\n";
+        } else {
+            echo "  ❌ Échec : {$result->error}\n";
+        }
+        echo "\n";
+    }
+
+    private function mailDriver(): void
+    {
+        new \Briko\core\App();
+
+        $driver = env('MAIL_DRIVER', 'log');
+        $from   = env('MAIL_FROM_ADDRESS', '—');
+        $name   = env('MAIL_FROM_NAME', '—');
+
+        echo "\n  📬 Driver Mail actif : $driver\n";
+        echo "  From : $name <$from>\n\n";
+
+        $details = match ($driver) {
+            'smtp' => [
+                'Host'       => env('MAIL_HOST', '—'),
+                'Port'       => env('MAIL_PORT', '587'),
+                'Encryption' => env('MAIL_ENCRYPTION', 'tls'),
+                'Username'   => env('MAIL_USERNAME') ? '✅ défini' : '❌ manquant (MAIL_USERNAME)',
+                'Password'   => env('MAIL_PASSWORD') ? '✅ défini' : '❌ manquant (MAIL_PASSWORD)',
+            ],
+            'sendgrid' => [
+                'API Key' => env('SENDGRID_API_KEY') ? '✅ défini' : '❌ manquant (SENDGRID_API_KEY)',
+            ],
+            'mailgun' => [
+                'API Key' => env('MAILGUN_API_KEY')  ? '✅ défini' : '❌ manquant (MAILGUN_API_KEY)',
+                'Domain'  => env('MAILGUN_DOMAIN')   ? env('MAILGUN_DOMAIN')  : '❌ manquant (MAILGUN_DOMAIN)',
+                'Region'  => env('MAILGUN_REGION', 'us'),
+            ],
+            default => ['Mode' => 'log — Emails affichés dans les logs, rien envoyé'],
+        };
+
+        foreach ($details as $k => $v) {
+            echo "    $k : $v\n";
+        }
+        echo "\n";
+    }
+
+    private function makeMail(string $name): void
+    {
+        $name = preg_replace('/[^A-Za-z0-9_]/', '', $name);
+        $dir  = base_path('village/mailables');
+        if (!is_dir($dir)) mkdir($dir, 0755, true);
+
+        $path = $dir . '/' . $name . 'Mail.php';
+        if (file_exists($path)) {
+            echo "⚠️  Mailable déjà existant : {$name}Mail\n";
+            return;
+        }
+
+        $tpl = '<?php' . "\n"
+            . 'namespace Briko\village\mailables;' . "\n\n"
+            . 'use Briko\courrier\Mail;' . "\n"
+            . 'use Briko\courrier\Mailable;' . "\n"
+            . 'use Briko\courrier\MailMessage;' . "\n\n"
+            . "class {$name}Mail extends Mailable\n{\n"
+            . "    public function __construct(\n"
+            . "        private array \$data = []\n"
+            . "    ) {}\n\n"
+            . "    public function build(): MailMessage\n"
+            . "    {\n"
+            . "        return Mail::to(\$this->data['email'])\n"
+            . "            ->subject('" . $name . " — ' . env('APP_NAME', 'Brikocode'))\n"
+            . "            ->view('" . strtolower($name) . "', ['data' => \$this->data]);\n"
+            . "            // ou ->html('<h1>Contenu HTML</h1>')\n"
+            . "    }\n"
+            . "}\n";
+
+        file_put_contents($path, $tpl);
+
+        // Crée aussi le template vue
+        $tplDir  = base_path('village/mails');
+        $tplFile = $tplDir . '/' . strtolower($name) . '.php';
+        if (!file_exists($tplFile)) {
+            file_put_contents($tplFile,
+                "<!DOCTYPE html>\n<html><head><meta charset='UTF-8'><title>$name</title></head>\n"
+                . "<body>\n  <h1>$name</h1>\n  <p>Contenu de l'email...</p>\n</body>\n</html>\n"
+            );
+            echo "✅ Template créé     : village/mails/" . strtolower($name) . ".php\n";
+        }
+
+        echo "✅ Mailable créé     : village/mailables/{$name}Mail.php\n";
+        echo "\n  Utilisation :\n";
+        echo "    Mail::send(new {$name}Mail(['email' => 'user@ci.ci']));\n\n";
     }
 }
