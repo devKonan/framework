@@ -1,6 +1,10 @@
 <?php
 namespace Briko\djassa;
 
+use Briko\core\App;
+use Briko\grenier\Connection;
+use PDO;
+
 class Console
 {
     public function run(array $argv): void
@@ -16,6 +20,18 @@ class Console
                 break;
             case 'fabrique:model':
                 $this->makeModel($argv[2] ?? 'Demo');
+                break;
+            case 'migrate':
+                $this->migrate();
+                break;
+            case 'migrate:status':
+                $this->migrateStatus();
+                break;
+            case 'migrate:rollback':
+                $this->migrateRollback();
+                break;
+            case 'migrate:fresh':
+                $this->migrateFresh();
                 break;
             case 'sync':
                 $this->sync();
@@ -60,6 +76,10 @@ class Console
         echo "    php briko feu                          Démarrer le serveur de dev\n";
         echo "    php briko fabrique:controller <Nom>    Créer un controller\n";
         echo "    php briko fabrique:model <Nom>         Créer un model\n\n";
+        echo "    php briko migrate                      Exécuter les migrations en attente\n";
+        echo "    php briko migrate:status               Voir l'état des migrations\n";
+        echo "    php briko migrate:rollback             Annuler le dernier batch\n";
+        echo "    php briko migrate:fresh                Rejouer toutes les migrations\n\n";
         echo "    php briko sync                         Rejouer les requêtes offline en attente\n";
         echo "    php briko sync:status                  Voir les requêtes en file d'attente\n";
         echo "    php briko sync:flush                   Vider la file d'attente offline\n\n";
@@ -243,6 +263,277 @@ class Console
     {
         \Briko\grenier\OfflineQueue::flush();
         echo "🗑  File d'attente offline vidée.\n";
+    }
+
+    // ─── Migrations ───────────────────────────────────────────────────────────
+
+    private function migrate(): void
+    {
+        $pdo = $this->migrationPdo();
+        if (!$pdo) return;
+
+        $this->ensureMigrationTable($pdo);
+
+        $files     = $this->migrationFiles();
+        $executed  = $this->executedMigrations($pdo);
+        $pending   = array_values(array_filter($files, fn (string $file) => !isset($executed[basename($file, '.php')])));
+
+        if (empty($pending)) {
+            echo "✅ Aucune migration en attente.\n";
+            return;
+        }
+
+        $batch = $this->nextBatch($pdo);
+        echo "\n  🧱 Migration batch #$batch\n";
+
+        $done = 0;
+        foreach ($pending as $file) {
+            $name = basename($file, '.php');
+            echo "  → $name ... ";
+
+            try {
+                $migration = $this->loadMigration($file);
+
+                $pdo->beginTransaction();
+                $this->callMigrationStep($migration['up'], $pdo);
+
+                $stmt = $pdo->prepare('INSERT INTO briko_migrations (migration, batch, ran_at) VALUES (?, ?, ?)');
+                $stmt->execute([$name, $batch, date('c')]);
+
+                $pdo->commit();
+                echo "✅\n";
+                $done++;
+            } catch (\Throwable $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                echo "❌ {$e->getMessage()}\n";
+                break;
+            }
+        }
+
+        echo "\n  Résultat : $done migration(s) exécutée(s).\n\n";
+    }
+
+    private function migrateStatus(): void
+    {
+        $pdo = $this->migrationPdo();
+        if (!$pdo) return;
+
+        $this->ensureMigrationTable($pdo);
+        $files    = $this->migrationFiles();
+        $executed = $this->executedMigrations($pdo);
+
+        if (empty($files)) {
+            echo "⚠️  Aucun fichier de migration trouvé dans grenier/migrations.\n";
+            return;
+        }
+
+        echo "\n  📋 État des migrations\n";
+        echo "  " . str_repeat('─', 72) . "\n";
+
+        foreach ($files as $file) {
+            $name = basename($file, '.php');
+            $row  = $executed[$name] ?? null;
+
+            if ($row) {
+                $batch = str_pad((string) $row['batch'], 4, ' ', STR_PAD_LEFT);
+                echo "  ✅ $name  (batch $batch, {$row['ran_at']})\n";
+                continue;
+            }
+
+            echo "  ⏳ $name  (pending)\n";
+        }
+
+        echo "\n";
+    }
+
+    private function migrateRollback(): void
+    {
+        $pdo = $this->migrationPdo();
+        if (!$pdo) return;
+
+        $this->ensureMigrationTable($pdo);
+        $batch = $this->latestBatch($pdo);
+
+        if ($batch === null) {
+            echo "✅ Aucun batch à annuler.\n";
+            return;
+        }
+
+        $filesMap = [];
+        foreach ($this->migrationFiles() as $file) {
+            $filesMap[basename($file, '.php')] = $file;
+        }
+
+        $stmt = $pdo->prepare('SELECT migration FROM briko_migrations WHERE batch = ? ORDER BY migration DESC');
+        $stmt->execute([$batch]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+        if (empty($rows)) {
+            echo "✅ Aucun batch à annuler.\n";
+            return;
+        }
+
+        echo "\n  ↩️  Rollback batch #$batch\n";
+
+        $done = 0;
+        foreach ($rows as $row) {
+            $name = $row['migration'];
+            echo "  → $name ... ";
+
+            if (!isset($filesMap[$name])) {
+                echo "❌ fichier de migration manquant\n";
+                break;
+            }
+
+            try {
+                $migration = $this->loadMigration($filesMap[$name]);
+
+                $pdo->beginTransaction();
+                $this->callMigrationStep($migration['down'], $pdo);
+
+                $del = $pdo->prepare('DELETE FROM briko_migrations WHERE migration = ?');
+                $del->execute([$name]);
+
+                $pdo->commit();
+                echo "✅\n";
+                $done++;
+            } catch (\Throwable $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                echo "❌ {$e->getMessage()}\n";
+                break;
+            }
+        }
+
+        echo "\n  Résultat : $done migration(s) annulée(s).\n\n";
+    }
+
+    private function migrateFresh(): void
+    {
+        $pdo = $this->migrationPdo();
+        if (!$pdo) return;
+
+        $this->ensureMigrationTable($pdo);
+
+        while (($batch = $this->latestBatch($pdo)) !== null) {
+            $filesMap = [];
+            foreach ($this->migrationFiles() as $file) {
+                $filesMap[basename($file, '.php')] = $file;
+            }
+
+            $stmt = $pdo->prepare('SELECT migration FROM briko_migrations WHERE batch = ? ORDER BY migration DESC');
+            $stmt->execute([$batch]);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+            foreach ($rows as $row) {
+                $name = $row['migration'];
+                if (!isset($filesMap[$name])) {
+                    throw new \RuntimeException("Migration introuvable pour rollback: $name");
+                }
+
+                $migration = $this->loadMigration($filesMap[$name]);
+
+                $pdo->beginTransaction();
+                $this->callMigrationStep($migration['down'], $pdo);
+
+                $del = $pdo->prepare('DELETE FROM briko_migrations WHERE migration = ?');
+                $del->execute([$name]);
+                $pdo->commit();
+            }
+        }
+
+        echo "🧼 Base remise à zéro. Relance des migrations...\n";
+        $this->migrate();
+    }
+
+    private function migrationFiles(): array
+    {
+        $dir = base_path('grenier/migrations');
+        if (!is_dir($dir)) {
+            return [];
+        }
+
+        $files = glob($dir . '/*.php') ?: [];
+        sort($files);
+        return $files;
+    }
+
+    private function migrationPdo(): ?PDO
+    {
+        try {
+            new App();
+            return Connection::get();
+        } catch (\Throwable $e) {
+            echo "❌ Connexion DB impossible : {$e->getMessage()}\n";
+            echo "   Vérifie DB_DRIVER / DB_HOST / DB_PORT / DB_NAME / DB_USER / DB_PASS dans .env\n";
+            return null;
+        }
+    }
+
+    private function ensureMigrationTable(PDO $pdo): void
+    {
+        $pdo->exec('CREATE TABLE IF NOT EXISTS briko_migrations (
+            migration VARCHAR(255) PRIMARY KEY,
+            batch INTEGER NOT NULL,
+            ran_at VARCHAR(32) NOT NULL
+        )');
+    }
+
+    private function executedMigrations(PDO $pdo): array
+    {
+        $rows = $pdo->query('SELECT migration, batch, ran_at FROM briko_migrations ORDER BY batch, migration')
+            ->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+        $result = [];
+        foreach ($rows as $row) {
+            $result[$row['migration']] = $row;
+        }
+
+        return $result;
+    }
+
+    private function latestBatch(PDO $pdo): ?int
+    {
+        $value = $pdo->query('SELECT MAX(batch) FROM briko_migrations')->fetchColumn();
+        if ($value === false || $value === null) {
+            return null;
+        }
+
+        return (int) $value;
+    }
+
+    private function nextBatch(PDO $pdo): int
+    {
+        return ($this->latestBatch($pdo) ?? 0) + 1;
+    }
+
+    private function loadMigration(string $file): array
+    {
+        $migration = require $file;
+
+        if (!is_array($migration) || !isset($migration['up'], $migration['down'])) {
+            throw new \RuntimeException('Migration invalide : ' . basename($file));
+        }
+
+        if (!is_callable($migration['up']) || !is_callable($migration['down'])) {
+            throw new \RuntimeException('Migration invalide (up/down non callable) : ' . basename($file));
+        }
+
+        return $migration;
+    }
+
+    private function callMigrationStep(callable $step, PDO $pdo): void
+    {
+        $reflection = new \ReflectionFunction(\Closure::fromCallable($step));
+        if ($reflection->getNumberOfParameters() > 0) {
+            $step($pdo);
+            return;
+        }
+
+        $step();
     }
 
     // ─── Logs ─────────────────────────────────────────────────────────────────
