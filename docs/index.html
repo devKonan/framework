@@ -1,0 +1,2198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brikocode — Documentation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<style>
+:root{
+  --orange:#ff6600;--orange2:#ff8533;--dark:#0a0a0a;--dark2:#111;--dark3:#161616;
+  --dark4:#1e1e1e;--border:#242424;--text:#e4e4e4;--muted:#666;--muted2:#888;
+  --green:#22c55e;--blue:#38bdf8;--purple:#a78bfa;--yellow:#fbbf24;
+  --sidebar:260px;--radius:8px;
+  --font:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--dark);color:var(--text);font-family:var(--font);line-height:1.7}
+a{color:var(--orange);text-decoration:none}
+a:hover{text-decoration:underline}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--dark2)}
+::-webkit-scrollbar-thumb{background:#333;border-radius:3px}
+
+/* ── TOP NAV ── */
+.topnav{
+  position:fixed;top:0;left:0;right:0;height:56px;z-index:200;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 1.5rem;border-bottom:1px solid var(--border);
+  background:rgba(10,10,10,.92);backdrop-filter:blur(12px);
+}
+.topnav-brand{display:flex;align-items:center;gap:.6rem;font-weight:800;font-size:1.05rem}
+.topnav-brand svg{width:28px;height:28px}
+.topnav-brand span{color:var(--orange)}
+.topnav-right{display:flex;align-items:center;gap:1rem}
+.nav-badge{
+  font-size:.65rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  background:linear-gradient(135deg,var(--orange),var(--orange2));
+  color:#fff;padding:2px 7px;border-radius:99px
+}
+.topnav-version{font-size:.8rem;color:var(--muted2);font-family:var(--mono)}
+.hamburger{
+  display:none;flex-direction:column;gap:4px;background:none;border:none;
+  cursor:pointer;padding:4px;
+}
+.hamburger span{display:block;width:20px;height:2px;background:var(--text);border-radius:2px;transition:.2s}
+
+/* ── LAYOUT ── */
+.layout{display:flex;padding-top:56px;min-height:100vh}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  position:fixed;top:56px;left:0;bottom:0;width:var(--sidebar);
+  overflow-y:auto;border-right:1px solid var(--border);
+  background:var(--dark2);padding:1.5rem 0;z-index:100;
+}
+.sidebar-section{margin-bottom:.25rem}
+.sidebar-group{
+  font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);padding:.75rem 1.25rem .25rem;
+}
+.sidebar a{
+  display:block;padding:.4rem 1.25rem .4rem 1.5rem;font-size:.875rem;color:var(--muted2);
+  border-left:2px solid transparent;transition:color .15s,border-color .15s,background .15s;
+  line-height:1.4;
+}
+.sidebar a:hover{color:var(--text);background:rgba(255,255,255,.03);text-decoration:none}
+.sidebar a.active{color:var(--orange);border-left-color:var(--orange);background:rgba(255,102,0,.06)}
+.sidebar-sub a{padding-left:2rem;font-size:.82rem}
+
+/* ── MAIN CONTENT ── */
+.content{
+  margin-left:var(--sidebar);flex:1;max-width:860px;
+  padding:3rem 3rem 6rem;min-width:0;
+}
+
+/* ── SECTIONS ── */
+.doc-section{
+  display:none;animation:fadeIn .25s ease;
+}
+.doc-section.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── TYPOGRAPHY ── */
+h1{font-size:2rem;font-weight:800;letter-spacing:-.5px;margin-bottom:.5rem;color:#fff}
+h2{font-size:1.35rem;font-weight:700;margin:2.5rem 0 .75rem;color:#fff;padding-bottom:.5rem;border-bottom:1px solid var(--border)}
+h3{font-size:1.05rem;font-weight:700;margin:1.75rem 0 .5rem;color:var(--text)}
+h4{font-size:.9rem;font-weight:700;margin:1.25rem 0 .4rem;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em}
+p{margin-bottom:1rem;color:#ccc;font-size:.95rem}
+ul,ol{padding-left:1.25rem;margin-bottom:1rem}
+li{margin-bottom:.35rem;font-size:.95rem;color:#ccc}
+strong{color:var(--text);font-weight:600}
+
+.lead{font-size:1.05rem;color:var(--muted2);margin-bottom:2rem;line-height:1.8}
+.section-badge{
+  display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;padding:3px 10px;border-radius:99px;margin-bottom:1rem;
+  background:rgba(255,102,0,.12);color:var(--orange2);border:1px solid rgba(255,102,0,.25)
+}
+
+/* ── CODE ── */
+pre{margin:1rem 0;border-radius:var(--radius);overflow-x:auto;border:1px solid var(--border);position:relative}
+pre code.hljs{font-family:var(--mono);font-size:.83rem;padding:1.25rem 1.5rem;background:var(--dark3)!important;border-radius:var(--radius)}
+.code-label{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.5rem 1rem;background:var(--dark4);border-bottom:1px solid var(--border);
+  border-radius:var(--radius) var(--radius) 0 0;font-size:.75rem;font-family:var(--mono);color:var(--muted2)
+}
+.code-label+pre{margin-top:0;border-top:none;border-radius:0 0 var(--radius) var(--radius)}
+.code-label+pre code.hljs{border-radius:0 0 var(--radius) var(--radius)}
+.copy-btn{
+  background:none;border:1px solid var(--border);border-radius:5px;
+  color:var(--muted2);font-size:.7rem;padding:2px 8px;cursor:pointer;
+  font-family:var(--mono);transition:color .15s,border-color .15s;
+}
+.copy-btn:hover{color:var(--orange);border-color:var(--orange)}
+.copy-btn.copied{color:var(--green);border-color:var(--green)}
+code:not(pre code){
+  font-family:var(--mono);font-size:.82em;
+  background:rgba(255,255,255,.07);border:1px solid var(--border);
+  padding:2px 6px;border-radius:4px;color:var(--orange2);
+}
+
+/* ── CALLOUTS ── */
+.callout{
+  padding:1rem 1.25rem;border-radius:var(--radius);margin:1.25rem 0;
+  border-left:3px solid;font-size:.9rem;
+}
+.callout-info{background:rgba(56,189,248,.07);border-color:var(--blue);color:#a0d4ee}
+.callout-tip{background:rgba(34,197,94,.07);border-color:var(--green);color:#86efac}
+.callout-warn{background:rgba(251,191,36,.07);border-color:var(--yellow);color:#fde68a}
+.callout strong{color:inherit}
+
+/* ── STEPS ── */
+.steps-list{list-style:none;padding:0;counter-reset:steps;margin:1.25rem 0}
+.steps-list li{
+  counter-increment:steps;padding:.75rem 1rem .75rem 3rem;position:relative;
+  border-left:2px solid var(--border);margin-left:1rem;margin-bottom:.1rem;
+  font-size:.92rem;color:#ccc;
+}
+.steps-list li::before{
+  content:counter(steps);position:absolute;left:-1.1rem;top:.65rem;
+  width:22px;height:22px;border-radius:50%;background:var(--orange);
+  color:#fff;font-size:.7rem;font-weight:800;display:flex;align-items:center;justify-content:center;
+}
+.steps-list li:last-child{border-left-color:transparent}
+
+/* ── TABLE ── */
+table{width:100%;border-collapse:collapse;margin:1.25rem 0;font-size:.875rem}
+thead th{
+  text-align:left;padding:.6rem 1rem;background:var(--dark4);
+  color:var(--muted2);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;
+  border-bottom:2px solid var(--border);
+}
+tbody td{padding:.65rem 1rem;border-bottom:1px solid var(--border);color:#ccc;vertical-align:top}
+tbody tr:hover td{background:rgba(255,255,255,.02)}
+tbody tr:last-child td{border-bottom:none}
+td code{font-size:.78rem}
+
+/* ── CARDS ── */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.75rem;margin:1.25rem 0}
+.card{
+  background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);
+  padding:1.1rem;cursor:pointer;transition:border-color .2s,transform .2s;
+}
+.card:hover{border-color:rgba(255,102,0,.4);transform:translateY(-2px)}
+.card-icon{font-size:1.5rem;margin-bottom:.5rem}
+.card-title{font-weight:700;font-size:.9rem;margin-bottom:.25rem}
+.card-desc{font-size:.8rem;color:var(--muted2)}
+
+/* ── PILL TAGS ── */
+.tag{
+  display:inline-block;font-size:.7rem;font-weight:600;padding:2px 8px;
+  border-radius:99px;border:1px solid;margin:.15rem .1rem;
+}
+.tag-get{background:rgba(34,197,94,.1);color:var(--green);border-color:rgba(34,197,94,.3)}
+.tag-post{background:rgba(251,191,36,.1);color:var(--yellow);border-color:rgba(251,191,36,.3)}
+.tag-put,.tag-patch{background:rgba(56,189,248,.1);color:var(--blue);border-color:rgba(56,189,248,.3)}
+.tag-delete{background:rgba(248,113,113,.1);color:#f87171;border-color:rgba(248,113,113,.3)}
+
+/* ── BREADCRUMB ── */
+.breadcrumb{font-size:.8rem;color:var(--muted);margin-bottom:1.5rem;display:flex;gap:.5rem;align-items:center}
+.breadcrumb span{color:var(--muted)}
+
+/* ── PAGINATION ── */
+.page-nav{
+  display:flex;justify-content:space-between;margin-top:3rem;
+  padding-top:1.5rem;border-top:1px solid var(--border);
+}
+.page-nav a{
+  display:flex;flex-direction:column;gap:.25rem;padding:.75rem 1rem;
+  border:1px solid var(--border);border-radius:var(--radius);max-width:220px;
+  background:var(--dark2);transition:border-color .2s;text-decoration:none;
+}
+.page-nav a:hover{border-color:var(--orange);text-decoration:none}
+.page-nav .pn-label{font-size:.7rem;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em}
+.page-nav .pn-title{font-size:.9rem;font-weight:600;color:var(--text)}
+.page-nav .pn-next{text-align:right;margin-left:auto}
+
+/* ── TUTORIAL STEPS ── */
+.tuto-step{
+  background:var(--dark2);border:1px solid var(--border);border-radius:var(--radius);
+  margin:1.25rem 0;overflow:hidden;
+}
+.tuto-step-header{
+  display:flex;align-items:center;gap:.75rem;
+  padding:.85rem 1.25rem;background:var(--dark3);border-bottom:1px solid var(--border);
+}
+.tuto-num{
+  width:28px;height:28px;flex-shrink:0;border-radius:50%;
+  background:linear-gradient(135deg,var(--orange),var(--orange2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:.8rem;font-weight:800;color:#fff;
+}
+.tuto-step-title{font-weight:700;font-size:.95rem}
+.tuto-step-body{padding:1.25rem}
+.tuto-step-body p:last-child,.tuto-step-body pre:last-child{margin-bottom:0}
+
+/* ── MOBILE ── */
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%);transition:transform .25s}
+  .sidebar.open{transform:translateX(0)}
+  .content{margin-left:0;padding:2rem 1.25rem 5rem}
+  .hamburger{display:flex}
+  .sidebar-overlay{
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;
+  }
+  .sidebar-overlay.open{display:block}
+  .examples-grid{grid-template-columns:1fr!important}
+}
+</style>
+</head>
+<body>
+
+<!-- Top nav -->
+<nav class="topnav">
+  <div class="topnav-brand">
+    <svg viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="8" fill="#1a1a1a"/><path d="M10 8h9.5c3.5 0 5.8 1.8 5.8 4.8 0 1.8-.9 3.2-2.4 4 2 .7 3.2 2.3 3.2 4.4 0 3.4-2.5 5.4-6.6 5.4H10V8z" fill="white" opacity=".9"/><path d="M14 12v4h5c1.4 0 2.2-.8 2.2-2s-.8-2-2.2-2h-5zm0 7.5v4.5h5.5c1.6 0 2.5-.9 2.5-2.25S21.1 19.5 19.5 19.5H14z" fill="#ff6600"/></svg>
+    Briko<span>code</span>
+  </div>
+  <div class="topnav-right">
+    <span class="topnav-version">v0.2.0</span>
+    <span class="nav-badge">Docs</span>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<div class="sidebar-overlay" id="overlay"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+
+  <div class="sidebar-section">
+    <div class="sidebar-group">Démarrage</div>
+    <a href="#" data-section="intro" class="active">Introduction</a>
+    <a href="#" data-section="installation">Installation</a>
+    <a href="#" data-section="structure">Structure du projet</a>
+    <a href="#" data-section="configuration">Configuration</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-group">HTTP</div>
+    <a href="#" data-section="routing">Routing</a>
+    <a href="#" data-section="request">Request</a>
+    <a href="#" data-section="response">Response</a>
+    <a href="#" data-section="middleware">Middleware</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-group">Base de données</div>
+    <a href="#" data-section="querybuilder">Query Builder</a>
+    <a href="#" data-section="migrations">Migrations</a>
+    <a href="#" data-section="models">Modèles</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-group">Services</div>
+    <a href="#" data-section="sms">SMS & OTP</a>
+    <a href="#" data-section="mail">Mail</a>
+    <a href="#" data-section="logging">Logging</a>
+    <a href="#" data-section="offline">Offline-First</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-group">Outils</div>
+    <a href="#" data-section="cli">CLI — Console</a>
+    <a href="#" data-section="helpers">Helpers</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-group">Tutoriels</div>
+    <a href="#" data-section="tuto-api">🔥 API REST — A à Z</a>
+    <a href="#" data-section="tuto-projet">🚀 Projet complet — A à Z</a>
+  </div>
+
+</aside>
+
+<!-- Main content -->
+<div class="layout">
+<main class="content">
+
+<!-- ═══════════════════════ INTRO ═══════════════════════ -->
+<section class="doc-section active" id="sec-intro">
+  <div class="breadcrumb">Docs <span>›</span> Introduction</div>
+  <span class="section-badge">Démarrage</span>
+  <h1>Brikocode Framework</h1>
+  <p class="lead">Framework PHP minimaliste conçu pour les développeurs africains. Zéro dépendance externe, PHP 8.1+, architecture claire.</p>
+
+  <div class="cards">
+    <div class="card" onclick="nav('installation')">
+      <div class="card-icon">⚡</div>
+      <div class="card-title">Installation</div>
+      <div class="card-desc">Démarrer en moins de 2 minutes</div>
+    </div>
+    <div class="card" onclick="nav('tuto-api')">
+      <div class="card-icon">🔥</div>
+      <div class="card-title">API REST A→Z</div>
+      <div class="card-desc">Construire une API complète pas à pas</div>
+    </div>
+    <div class="card" onclick="nav('tuto-projet')">
+      <div class="card-icon">🚀</div>
+      <div class="card-title">Projet complet A→Z</div>
+      <div class="card-desc">App avec auth, DB, SMS, Mail</div>
+    </div>
+    <div class="card" onclick="nav('cli')">
+      <div class="card-icon">💻</div>
+      <div class="card-title">CLI</div>
+      <div class="card-desc">Toutes les commandes briko</div>
+    </div>
+  </div>
+
+  <h2>Pourquoi Brikocode ?</h2>
+  <table>
+    <thead><tr><th>Fonctionnalité</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Zéro dépendance</strong></td><td>Aucun package externe requis. PHP natif partout.</td></tr>
+      <tr><td><strong>Offline-First</strong></td><td>Cache GET + queue JSON pour connexions instables (2G/3G)</td></tr>
+      <tr><td><strong>SMS natif</strong></td><td>Africa's Talking, Twilio, HTTP générique, OTP intégré</td></tr>
+      <tr><td><strong>Mail natif</strong></td><td>SMTP via sockets PHP, SendGrid, Mailgun, templates PHP</td></tr>
+      <tr><td><strong>Low Bandwidth</strong></td><td>Gzip auto, sélection de champs, suppression nulls</td></tr>
+      <tr><td><strong>CLI puissant</strong></td><td>Migrations, générateurs, logs, sync offline</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Prérequis</h2>
+  <ul>
+    <li>PHP <strong>8.1+</strong> (8.2 ou 8.3 recommandé)</li>
+    <li>Composer 2.x</li>
+    <li>Extension PDO + driver DB (mysqli, pgsql ou sqlite3)</li>
+    <li>Extension <code>openssl</code> (pour SMTP TLS/SSL)</li>
+  </ul>
+
+  <div class="page-nav">
+    <div></div>
+    <a href="#" class="pn-next" onclick="nav('installation');return false">
+      <span class="pn-label">Suivant →</span>
+      <span class="pn-title">Installation</span>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════ INSTALLATION ═══════════════════════ -->
+<section class="doc-section" id="sec-installation">
+  <div class="breadcrumb">Docs <span>›</span> Installation</div>
+  <span class="section-badge">Démarrage</span>
+  <h1>Installation</h1>
+  <p class="lead">Créer un nouveau projet Brikocode en une commande.</p>
+
+  <h2>Créer un projet</h2>
+  <div class="code-label"><span>Terminal</span><button class="copy-btn" data-copy="composer create-project brikocode/framework mon-projet">Copier</button></div>
+  <pre><code class="language-bash">composer create-project brikocode/framework mon-projet
+cd mon-projet</code></pre>
+
+  <h2>Configurer l'environnement</h2>
+  <div class="code-label"><span>Terminal</span></div>
+  <pre><code class="language-bash">php briko env:setup</code></pre>
+  <p>Cela crée le fichier <code>.env</code> depuis <code>.env.example</code>. Ouvre-le et remplis tes valeurs.</p>
+
+  <h2>Démarrer le serveur</h2>
+  <div class="code-label"><span>Terminal</span></div>
+  <pre><code class="language-bash">php briko feu
+# → Serveur lancé sur http://localhost:8000</code></pre>
+
+  <div class="callout callout-tip">
+    <strong>✅ Prêt !</strong> Ouvre <a href="http://localhost:8000">http://localhost:8000</a> — tu verras la page d'accueil Brikocode.
+  </div>
+
+  <h2>Installation manuelle (sans Packagist)</h2>
+  <div class="code-label"><span>Terminal</span></div>
+  <pre><code class="language-bash">git clone https://github.com/devKonan/framework mon-projet
+cd mon-projet
+composer install
+php briko env:setup
+php briko feu</code></pre>
+
+  <div class="page-nav">
+    <a href="#" onclick="nav('intro');return false">
+      <span class="pn-label">← Précédent</span>
+      <span class="pn-title">Introduction</span>
+    </a>
+    <a href="#" class="pn-next" onclick="nav('structure');return false">
+      <span class="pn-label">Suivant →</span>
+      <span class="pn-title">Structure du projet</span>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════ STRUCTURE ═══════════════════════ -->
+<section class="doc-section" id="sec-structure">
+  <div class="breadcrumb">Docs <span>›</span> Structure du projet</div>
+  <span class="section-badge">Démarrage</span>
+  <h1>Structure du projet</h1>
+
+  <div class="code-label"><span>Arborescence</span></div>
+  <pre><code class="language-bash">mon-projet/
+│
+├── app/                      ← Ton application
+│   ├── routes.php            Définition des routes
+│   ├── controllers/          Controllers HTTP
+│   ├── models/               Modèles de données
+│   ├── mailables/            Classes Mail (Mailable)
+│   ├── mails/                Templates HTML d'emails
+│   └── views/                Vues HTML
+│
+├── foundation/               Noyau du framework
+│   ├── App.php
+│   ├── Env.php
+│   ├── Logger.php
+│   └── helpers.php           Fonctions globales
+│
+├── http/                     Couche HTTP
+│   ├── Kernel.php
+│   ├── Request.php
+│   ├── Response.php
+│   └── Middleware/
+│
+├── routing/                  Routeur
+│   └── Router.php
+│
+├── database/                 Base de données
+│   ├── Connection.php        PDO singleton
+│   ├── QueryBuilder.php      ORM léger
+│   ├── DB.php                Facade statique
+│   ├── OfflineQueue.php
+│   ├── ResponseCache.php
+│   └── migrations/           Tes fichiers de migration
+│
+├── sms/                      Module SMS
+├── mail/                     Module Mail
+├── console/                  CLI
+│
+├── storage/
+│   ├── logs/                 Logs journaliers
+│   ├── cache/                Cache GET offline
+│   ├── queue/                File d'attente offline
+│   └── otp/                  Codes OTP temporaires
+│
+├── public/
+│   └── index.php             Point d'entrée HTTP
+├── briko                     CLI entrypoint
+├── .env                      Configuration (ne pas committer)
+├── .env.example              Template de config
+└── composer.json</code></pre>
+
+  <div class="callout callout-info">
+    <strong>Ton code va dans <code>app/</code>.</strong> Le reste (http/, database/, mail/, etc.) est le framework — tu n'as normalement pas besoin de le modifier.
+  </div>
+
+  <div class="page-nav">
+    <a href="#" onclick="nav('installation');return false">
+      <span class="pn-label">← Précédent</span>
+      <span class="pn-title">Installation</span>
+    </a>
+    <a href="#" class="pn-next" onclick="nav('configuration');return false">
+      <span class="pn-label">Suivant →</span>
+      <span class="pn-title">Configuration</span>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════ CONFIGURATION ═══════════════════════ -->
+<section class="doc-section" id="sec-configuration">
+  <div class="breadcrumb">Docs <span>›</span> Configuration</div>
+  <span class="section-badge">Démarrage</span>
+  <h1>Configuration</h1>
+  <p class="lead">Toute la configuration passe par le fichier <code>.env</code> à la racine.</p>
+
+  <div class="code-label"><span>.env</span></div>
+  <pre><code class="language-bash"># ── Application ──────────────────────────────────────────
+APP_NAME=MonApp
+APP_ENV=local           # local | production
+APP_DEBUG=true
+APP_URL=http://localhost:8000
+APP_PORT=8000
+
+# ── Logs ─────────────────────────────────────────────────
+LOG_LEVEL=DEBUG         # DEBUG | INFO | WARNING | ERROR | CRITICAL
+
+# ── Base de données ──────────────────────────────────────
+DB_DRIVER=mysql         # mysql | pgsql | sqlite
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_NAME=ma_base
+DB_USER=root
+DB_PASS=
+
+# SQLite
+# DB_DRIVER=sqlite
+# DB_PATH=database/db.sqlite
+
+# ── SMS ──────────────────────────────────────────────────
+SMS_DRIVER=log          # log | africastalking | twilio | http
+SMS_FROM=MonApp
+
+# Africa's Talking (recommandé pour l'Afrique)
+AT_USERNAME=sandbox
+AT_API_KEY=
+AT_SANDBOX=true
+
+# Twilio
+TWILIO_SID=
+TWILIO_TOKEN=
+TWILIO_FROM=
+
+# ── Mail ─────────────────────────────────────────────────
+MAIL_DRIVER=log         # log | smtp | sendgrid | mailgun
+MAIL_FROM_ADDRESS=noreply@monapp.ci
+MAIL_FROM_NAME=MonApp
+
+# SMTP
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=
+MAIL_PASSWORD=
+MAIL_ENCRYPTION=tls     # tls | ssl | none
+
+# SendGrid
+SENDGRID_API_KEY=
+
+# Mailgun
+MAILGUN_API_KEY=
+MAILGUN_DOMAIN=
+MAILGUN_REGION=us</code></pre>
+
+  <h2>Lire les variables dans le code</h2>
+  <div class="code-label"><span>PHP</span></div>
+  <pre><code class="language-php">// Fonction helper
+$appName = env('APP_NAME', 'Brikocode');   // valeur, défaut
+$debug   = env('APP_DEBUG', false);
+
+// Classe Env
+use Briko\Foundation\Env;
+$val = Env::get('APP_URL');</code></pre>
+
+  <div class="callout callout-warn">
+    <strong>⚠️ Ne jamais committer <code>.env</code></strong> — il contient tes mots de passe et clés API. Le fichier est dans <code>.gitignore</code> par défaut.
+  </div>
+
+  <div class="page-nav">
+    <a href="#" onclick="nav('structure');return false">
+      <span class="pn-label">← Précédent</span>
+      <span class="pn-title">Structure</span>
+    </a>
+    <a href="#" class="pn-next" onclick="nav('routing');return false">
+      <span class="pn-label">Suivant →</span>
+      <span class="pn-title">Routing</span>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════ ROUTING ═══════════════════════ -->
+<section class="doc-section" id="sec-routing">
+  <div class="breadcrumb">Docs <span>›</span> Routing</div>
+  <span class="section-badge">HTTP</span>
+  <h1>Routing</h1>
+  <p class="lead">Toutes les routes sont définies dans <code>app/routes.php</code>.</p>
+
+  <h2>Routes de base</h2>
+  <div class="code-label"><span>app/routes.php</span></div>
+  <pre><code class="language-php">&lt;?php
+use App\Controllers\UserController;
+
+// GET
+$router->get('/users', [UserController::class, 'index']);
+
+// POST
+$router->post('/users', [UserController::class, 'store']);
+
+// PUT
+$router->put('/users/{id}', [UserController::class, 'update']);
+
+// PATCH
+$router->patch('/users/{id}', [UserController::class, 'patch']);
+
+// DELETE
+$router->delete('/users/{id}', [UserController::class, 'destroy']);
+
+// Closure inline
+$router->get('/ping', fn() => ['pong' => true, 'ts' => time()]);</code></pre>
+
+  <h2>Routes dynamiques</h2>
+  <p>Les paramètres <code>{nom}</code> sont automatiquement extraits et accessibles via <code>$request->param()</code>.</p>
+  <div class="code-label"><span>app/routes.php</span></div>
+  <pre><code class="language-php">$router->get('/users/{id}', [UserController::class, 'show']);
+$router->get('/posts/{slug}/comments/{commentId}', [CommentController::class, 'show']);</code></pre>
+
+  <div class="code-label"><span>app/controllers/UserController.php</span></div>
+  <pre><code class="language-php">public function show(Request $request): array
+{
+    $id = $request->param('id');      // valeur du {id}
+    return ['user_id' => $id];
+}</code></pre>
+
+  <h2>Routes avec Middleware</h2>
+  <div class="code-label"><span>app/routes.php</span></div>
+  <pre><code class="language-php">use Briko\Http\Middleware\Guard;
+use Briko\Http\Middleware\OfflineFirst;
+use Briko\Http\Middleware\LowBandwidth;
+
+// Un seul middleware
+$router->get('/dashboard', [DashboardController::class, 'index'], [Guard::class]);
+
+// Plusieurs middlewares (exécutés dans l'ordre)
+$router->post('/orders', [OrderController::class, 'store'], [
+    Guard::class,
+    OfflineFirst::class,
+]);
+
+// Low Bandwidth pour les clients mobiles
+$router->get('/api/products', [ProductController::class, 'index'], [LowBandwidth::class]);</code></pre>
+
+  <div class="page-nav">
+    <a href="#" onclick="nav('configuration');return false">
+      <span class="pn-label">← Précédent</span>
+      <span class="pn-title">Configuration</span>
+    </a>
+    <a href="#" class="pn-next" onclick="nav('request');return false">
+      <span class="pn-label">Suivant →</span>
+      <span class="pn-title">Request</span>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════ REQUEST ═══════════════════════ -->
+<section class="doc-section" id="sec-request">
+  <div class="breadcrumb">Docs <span>›</span> Request</div>
+  <span class="section-badge">HTTP</span>
+  <h1>Request</h1>
+
+  <h2>Accéder aux données</h2>
+  <div class="code-label"><span>PHP</span></div>
+  <pre><code class="language-php">public function store(Request $request): array
+{
+    // Paramètre de route {id}
+    $id = $request->param('id');
+
+    // Input unifié : cherche dans query + body + json
+    $name  = $request->input('name');
+    $email = $request->input('email', 'defaut@ci.ci');
+
+    // Accès direct
+    $query = $request->query;      // tableau $_GET
+    $post  = $request->post;       // tableau $_POST
+    $files = $request->files;      // tableau $_FILES
+
+    // Corps JSON brut décodé
+    $body = $request->body();      // array
+
+    // Tout fusionné (query + post + body + params)
+    $all = $request->all();
+
+    return $all;
+}</code></pre>
+
+  <h2>Détection du contexte</h2>
+  <div class="code-label"><span>PHP</span></div>
+  <pre><code class="language-php">$request->isJson();            // Content-Type: application/json ?
+$request->isLowBandwidth();    // ?lb=1 ou X-Low-Bandwidth: 1
+$request->acceptsGzip();       // Accept-Encoding: gzip
+$request->wantsFields();       // ?fields=id,nom,email</code></pre>
+
+  <div class="page-nav">
+    <a href="#" onclick="nav('routing');return false">
+      <span class="pn-label">← Précédent</span>
+      <span class="pn-title">Routing</span>
+    </a>
+    <a href="#" class="pn-next" onclick="nav('response');return false">
+      <span class="pn-label">Suivant →</span>
+      <span class="pn-title">Response</span>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════ RESPONSE ═══════════════════════ -->
+<section class="doc-section" id="sec-response">
+  <div class="breadcrumb">Docs <span>›</span> Response</div>
+  <span class="section-badge">HTTP</span>
+  <h1>Response</h1>
+
+  <h2>Retourner du JSON</h2>
+  <p>Retourner un tableau depuis un controller envoie automatiquement une réponse JSON.</p>
+  <div class="code-label"><span>PHP</span></div>
+  <pre><code class="language-php">// Réponse JSON automatique (retour tableau)
+public function index(Request $request): array
+{
+    return ['users' => db('users')->get()];
+}
+
+// Avec statut HTTP personnalisé
+public function store(Request $request): void
+{
+    $id = db('users')->insertGetId($request->all());
+    Response::json(['id' => $id, 'created' => true], 201);
+}
+
+// Erreur
+public function show(Request $request): void
+{
+    $user = db('users')->find($request->param('id'));
+    if (!$user) {
+        Response::notFound('Utilisateur introuvable');
+        return;
+    }
+    Response::json($user);
+}</code></pre>
+
+  <h2>Réponse HTML</h2>
+  <div class="code-label"><span>PHP</span></div>
+  <pre><code class="language-php">Response::html('&lt;h1&gt;Bonjour&lt;/h1&gt;');
+Response::html($html, 200);</code></pre>
+
+  <h2>Méthodes disponibles</h2>
+  <table>
+    <thead><tr><th>Méthode</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>Response::json($data, $status)</code></td><td>Réponse JSON</td></tr>
+      <tr><td><code>Response::html($html, $status)</code></td><td>Réponse HTML</td></tr>
+      <tr><td><code>Response::send($content, $status)</code></td><td>Détecte automatiquement array=JSON</td></tr>
+      <tr><td><code>Response::notFound($message)</code></td><td>404 JSON</td></tr>
+      <tr><td><code>Response::error($message, $status)</code></td><td>Erreur JSON</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-nav">
+    <a href="#" onclick="nav('request');return false">
+      <span class="pn-label">← Précédent</span>
+      <span class="pn-title">Request</span>
+    </a>
+    <a href="#" class="pn-next" onclick="nav('middleware');return false">
+      <span class="pn-label">Suivant →</span>
+      <span class="pn-title">Middleware</span>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════ MIDDLEWARE ═══════════════════════ -->
+<section class="doc-section" id="sec-middleware">
+  <div class="breadcrumb">Docs <span>›</span> Middleware</div>
+  <span class="section-badge">HTTP</span>
+  <h1>Middleware</h1>
+
+  <h2>Middlewares inclus</h2>
+  <table>
+    <thead><tr><th>Classe</th><th>Rôle</th></tr></thead>
+    <tbody>
+      <tr><td><code>Guard</code></td><td>Exemple d'authentification (à personnaliser)</td></tr>
+      <tr><td><code>OfflineFirst</code></td><td>Cache GET + queue writes si DB hors ligne</td></tr>
+      <tr><td><code>LowBandwidth</code></td><td>Gzip + sélection de champs + strip nulls</td></tr>
+      <tr><td><code>HttpLogger</code></td><td>Log automatique de chaque requête HTTP</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Créer un middleware</h2>
+  <div class="code-label"><span>app/controllers/Middleware/AuthMiddleware.php</span></div>
+  <pre><code class="language-php">&lt;?php
+namespace App\Middleware;
+
+use Briko\Http\Middleware\MiddlewareInterface;
+use Briko\Http\Request;
+
+class AuthMiddleware implements MiddlewareInterface
+{
+    public function handle(Request $request, callable $next): mixed
+    {
+        $token = $request->input('token')
+               ?? ($_SERVER['HTTP_AUTHORIZATION'] ?? '');
+
+        if (!$this->isValid($token)) {
+            return ['error' => 'Non autorisé', '_status' => 401];
+        }
+
+        return $next($request);
+    }
+
+    private function isValid(string $token): bool
+    {
+        return $token === env('API_TOKEN', '');
+    }
+}</code></pre>
+
+  <div class="code-label"><span>app/routes.php</span></div>
+  <pre><code class="language-php">use App\Middleware\AuthMiddleware;
+
+$router->get('/admin/users', [AdminController::class, 'index'], [
+    AuthMiddleware::class,
+]);</code></pre>
+
+  <div class="page-nav">
+    <a href="#" onclick="nav('response');return false">
+      <span class="pn-label">← Précédent</span>
+      <span class="pn-title">Response</span>
+    </a>
+    <a href="#" class="pn-next" onclick="nav('querybuilder');return false">
+      <span class="pn-label">Suivant →</span>
+      <span class="pn-title">Query Builder</span>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════ QUERY BUILDER ═══════════════════════ -->
+<section class="doc-section" id="sec-querybuilder">
+  <div class="breadcrumb">Docs <span>›</span> Query Builder</div>
+  <span class="section-badge">Base de données</span>
+  <h1>Query Builder</h1>
+  <p class="lead">ORM fluent construit sur PDO. Supporte MySQL, PostgreSQL et SQLite sans dépendance externe.</p>
+
+  <h2>SELECT</h2>
+  <div class="code-label"><span>PHP</span></div>
+  <pre><code class="language-php">// Tous les enregistrements
+$users = db('users')->get();
+
+// Avec conditions
+$actifs = db('users')
+    ->select('id', 'nom', 'email')
+    ->where('actif', 1)
+    ->where('role', 'admin')
+    ->orderBy('nom', 'ASC')
+    ->limit(50)
+    ->get();
+
+// Un seul résultat
+$user = db('users')->where('email', 'aya@ci.ci')->first();
+
+// Par ID
+$user = db('users')->find(1);
+
+// findOrFail — lance une exception si absent
+$user = db('users')->findOrFail(99);
+
+// Pluck — tableau d'une colonne
+$emails = db('users')->where('actif', 1)->pluck('email');
+
+// Compter
+$total = db('users')->where('actif', 1)->count();
+
+// Existe ?
+$existe = db('users')->where('email', 'test@ci.ci')->exists();</code></pre>
+
+  <h2>Pagination</h2>
+  <div class="code-label"><span>PHP</span></div>
+  <pre><code class="language-php">$result = db('users')->where('actif', 1)->paginate(20);
+// Retourne :
+// {
+//   "data": [...],
+//   "total": 150,
+//   "per_page": 20,
+//   "current_page": 1,
+//   "last_page": 8
+// }
+
+// Page suivante : GET /users?page=2</code></pre>
+
+  <h2>INSERT</h2>
+  <div class="code-label"><span>PHP</span></div>
+  <pre><code class="language-php">// Insérer et récupérer l'ID
+$id = db('users')->insertGetId([
+    'nom'   => 'Aya Koné',
+    'email' => 'aya@ci.ci',
+    'actif' => 1,
+]);
+
+// Insérer sans récupérer l'ID
+db('users')->insert([
+    'nom'   => 'Kofi',
+    'email' => 'kofi@gh.ci',
+]);</code></pre>
+
+  <h2>UPDATE</h2>
+  <div class="code-label"><span>PHP</span></div>
+  <pre><code class="language-php">$nb = db('users')
+    ->where('id', 5)
+    ->update(['nom' => 'Aya Koné-Bamba', 'actif' => 0]);</code></pre>
+
+  <h2>DELETE</h2>
+  <div class="code-label"><span>PHP</span></div>
+  <pre><code class="language-php">$nb = db('users')->where('id', 5)->delete();
+
+// Supprimer selon plusieurs conditions
+db('sessions')->where('user_id', 5)->where('expires_at', '<', time())->delete();</code></pre>
+
+  <h2>Requêtes brutes</h2>
+  <div class="code-label"><span>PHP</span></div>
+  <pre><code class="language-php">// SELECT brut
+$results = db('users')->raw(
+    'SELECT * FROM users WHERE created_at > ?',
+    [date('Y-m-d', strtotime('-7 days'))]
+);
+
+// Exécution brute (INSERT/UPDATE/DELETE)
+db('users')->rawExec(
+    'UPDATE users SET score = score + ? WHERE id = ?',
+    [10, 42]
+);</code></pre>
+
+  <div class="page-nav">
+    <a href="#" onclick="nav('middleware');return false">
+      <span class="pn-label">← Précédent</span>
+      <span class="pn-title">Middleware</span>
+    </a>
+    <a href="#" class="pn-next" onclick="nav('migrations');return false">
+      <span class="pn-label">Suivant →</span>
+      <span class="pn-title">Migrations</span>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════ MIGRATIONS ═══════════════════════ -->
+<section class="doc-section" id="sec-migrations">
+  <div class="breadcrumb">Docs <span>›</span> Migrations</div>
+  <span class="section-badge">Base de données</span>
+  <h1>Migrations</h1>
+  <p class="lead">Versionne ton schéma de base de données avec des fichiers PHP.</p>
+
+  <h2>Créer une migration</h2>
+  <p>Place le fichier dans <code>database/migrations/</code> avec le format <code>YYYY_MM_DD_HHMMSS_description.php</code> :</p>
+
+  <div class="code-label"><span>database/migrations/2024_01_15_120000_create_users_table.php</span></div>
+  <pre><code class="language-php">&lt;?php
+return [
+    'up' => function (PDO $pdo): void {
+        $pdo->exec("
+            CREATE TABLE users (
+                id         INT AUTO_INCREMENT PRIMARY KEY,
+                nom        VARCHAR(100) NOT NULL,
+                email      VARCHAR(150) NOT NULL UNIQUE,
+                telephone  VARCHAR(20),
+                password   VARCHAR(255),
+                role       ENUM('user','admin') DEFAULT 'user',
+                actif      TINYINT(1) DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        ");
+    },
+    'down' => function (PDO $pdo): void {
+        $pdo->exec("DROP TABLE IF EXISTS users");
+    },
+];</code></pre>
+
+  <h2>Commandes</h2>
+  <div class="code-label"><span>Terminal</span></div>
+  <pre><code class="language-bash"># Exécuter les migrations en attente
+php briko migrate
+
+# Voir l'état de chaque migration
+php briko migrate:status
+
+# Annuler le dernier batch
+php briko migrate:rollback
+
+# Tout supprimer et rejouer (dangereux en production !)
+php briko migrate:fresh</code></pre>
+
+  <div class="callout callout-warn">
+    <strong>⚠️ <code>migrate:fresh</code></strong> supprime toutes les tables et les recrée. À utiliser uniquement en développement.
+  </div>
+
+  <div class="page-nav">
+    <a href="#" onclick="nav('querybuilder');return false">
+      <span class="pn-label">← Précédent</span>
+      <span class="pn-title">Query Builder</span>
+    </a>
+    <a href="#" class="pn-next" onclick="nav('models');return false">
+      <span class="pn-label">Suivant →</span>
+      <span class="pn-title">Modèles</span>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════ MODELS ═══════════════════════ -->
+<section class="doc-section" id="sec-models">
+  <div class="breadcrumb">Docs <span>›</span> Modèles</div>
+  <span class="section-badge">Base de données</span>
+  <h1>Modèles</h1>
+
+  <h2>Générer un modèle</h2>
+  <div class="code-label"><span>Terminal</span></div>
+  <pre><code class="language-bash">php briko fabrique:model User</code></pre>
+
+  <p>Crée <code>app/models/User.php</code> :</p>
+  <div class="code-label"><span>app/models/User.php</span></div>
+  <pre><code class="language-php">&lt;?php
+namespace App\Models;
+
+use Briko\Database\DB;
+
+class User
+{
+    protected static string $table = 'users';
+
+    public static function all(): array
+    {
+        return DB::table(static::$table)->get();
+    }
+
+    public static function find(int|string $id): ?array
+    {
+        return DB::table(static::$table)->find($id);
+    }
+
+    public static function where(string $col, mixed $val): array
+    {
+        return DB::table(static::$table)->where($col, $val)->get();
+    }
+
+    public static function create(array $data): int|string
+    {
+        return DB::table(static::$table)->insertGetId($data);
+    }
+
+    public static function update(int|string $id, array $data): int
+    {
+        return DB::table(static::$table)->where('id', $id)->update($data);
+    }
+
+    public static function delete(int|string $id): int
+    {
+        return DB::table(static::$table)->where('id', $id)->delete();
+    }
+}</code></pre>
+
+  <div class="page-nav">
+    <a href="#" onclick="nav('migrations');return false">
+      <span class="pn-label">← Précédent</span>
+      <span class="pn-title">Migrations</span>
+    </a>
+    <a href="#" class="pn-next" onclick="nav('sms');return false">
+      <span class="pn-label">Suivant →</span>
+      <span class="pn-title">SMS & OTP</span>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════ SMS ═══════════════════════ -->
+<section class="doc-section" id="sec-sms">
+  <div class="breadcrumb">Docs <span>›</span> SMS & OTP</div>
+  <span class="section-badge">Services</span>
+  <h1>SMS & OTP</h1>
+
+  <h2>Configuration</h2>
+  <div class="code-label"><span>.env</span></div>
+  <pre><code class="language-bash">SMS_DRIVER=africastalking   # log | africastalking | twilio | http
+SMS_FROM=MonApp
+
+# Africa's Talking (recommandé Afrique)
+AT_USERNAME=monapp
+AT_API_KEY=ma_cle_api
+AT_SANDBOX=false            # true en développement</code></pre>
+
+  <h2>Envoyer un SMS</h2>
+  <div class="code-label"><span>PHP</span></div>
+  <pre><code class="language-php">use Briko\Sms\SMS;
+
+// Helper global
+sms('+225070000000')
+    ->message('Votre commande #1042 est confirmée !')
+    ->send();
+
+// Multi-destinataires
+sms(['+225070000000', '+225090000000'])
+    ->message('Nouvelle promotion !')
+    ->send();
+
+// Avec expéditeur personnalisé
+sms('+225070000000')
+    ->from('BOUTIQUE')
+    ->message('Bienvenue !')
+    ->send();</code></pre>
+
+  <h2>OTP — Vérification par SMS</h2>
+  <div class="code-label"><span>PHP</span></div>
+  <pre><code class="language-php">// 1. Générer et envoyer l'OTP
+$code = SMS::otp('+225070000000');
+// SMS envoyé : "Votre code de vérification : 482931"
+
+// 2. Vérifier le code saisi par l'utilisateur
+if (SMS::verifyOtp('+225070000000', $request->input('code'))) {
+    // ✅ Numéro vérifié
+    return ['verified' => true];
+} else {
+    // ❌ Code invalide ou expiré
+    return ['error' => 'Code invalide'];
+}
+
+// Vérifier si un OTP est en attente
+$enAttente = SMS::otpPending('+225070000000');
+
+// Annuler un OTP
+SMS::cancelOtp('+225070000000');</code></pre>
+
+  <div class="callout callout-tip">
+    <strong>Durée de vie OTP :</strong> 10 minutes par défaut. Max 3 tentatives avant invalidation automatique. Stockage dans <code>storage/otp/</code> sans base de données.
+  </div>
+
+  <h2>Drivers disponibles</h2>
+  <table>
+    <thead><tr><th>Driver</th><th>SMS_DRIVER</th><th>Couverture</th></tr></thead>
+    <tbody>
+      <tr><td>Africa's Talking</td><td><code>africastalking</code></td><td>CI, GH, SN, KE, NG + 10 pays</td></tr>
+      <tr><td>Twilio</td><td><code>twilio</code></td><td>Mondial</td></tr>
+      <tr><td>HTTP générique</td><td><code>http</code></td><td>Orange CI, MTN, Moov, Airtel...</td></tr>
+      <tr><td>Log (dev)</td><td><code>log</code></td><td>SMS dans les logs, rien envoyé</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Tester la config</h2>
+  <div class="code-label"><span>Terminal</span></div>
+  <pre><code class="language-bash">php briko sms:driver              # Voir le driver actif
+php briko sms:test +225070000000  # Envoyer un SMS de test
+php briko sms:otp +225070000000   # Tester l'OTP</code></pre>
+
+  <div class="page-nav">
+    <a href="#" onclick="nav('models');return false">
+      <span class="pn-label">← Précédent</span>
+      <span class="pn-title">Modèles</span>
+    </a>
+    <a href="#" class="pn-next" onclick="nav('mail');return false">
+      <span class="pn-label">Suivant →</span>
+      <span class="pn-title">Mail</span>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════ MAIL ═══════════════════════ -->
+<section class="doc-section" id="sec-mail">
+  <div class="breadcrumb">Docs <span>›</span> Mail</div>
+  <span class="section-badge">Services</span>
+  <h1>Mail</h1>
+
+  <h2>Configuration</h2>
+  <div class="code-label"><span>.env</span></div>
+  <pre><code class="language-bash">MAIL_DRIVER=smtp
+MAIL_FROM_ADDRESS=noreply@monapp.ci
+MAIL_FROM_NAME=MonApp
+
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=ton@gmail.com
+MAIL_PASSWORD=ton_mot_de_passe_app   # Mot de passe d'application Google
+MAIL_ENCRYPTION=tls</code></pre>
+
+  <h2>Envoi simple</h2>
+  <div class="code-label"><span>PHP</span></div>
+  <pre><code class="language-php">use Briko\Mail\Mail;
+
+// HTML direct
+Mail::to('client@ci.ci')
+    ->subject('Votre commande est confirmée')
+    ->html('&lt;h1&gt;Merci pour votre commande !&lt;/h1&gt;')
+    ->send();
+
+// Helper global
+mail_to('client@ci.ci')
+    ->subject('Bienvenue !')
+    ->html('&lt;p&gt;Ton compte est créé.&lt;/p&gt;')
+    ->send();
+
+// Multi-destinataires + CC
+Mail::to(['a@ci.ci', 'b@ci.ci'])
+    ->cc('copie@ci.ci')
+    ->subject('Newsletter')
+    ->html($html)
+    ->send();</code></pre>
+
+  <h2>Templates PHP</h2>
+  <p>Place tes templates dans <code>app/mails/</code>.</p>
+
+  <div class="code-label"><span>app/mails/bienvenue.php</span></div>
+  <pre><code class="language-php">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;body&gt;
+  &lt;h1&gt;Bienvenue, &lt;?= htmlspecialchars($user['nom']) ?&gt; !&lt;/h1&gt;
+  &lt;p&gt;Ton compte a été créé avec succès.&lt;/p&gt;
+  &lt;a href="&lt;?= env('APP_URL') ?&gt;"&gt;Accéder à mon compte&lt;/a&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+  <div class="code-label"><span>PHP</span></div>
+  <pre><code class="language-php">Mail::to($user['email'])
+    ->subject('Bienvenue sur ' . env('APP_NAME'))
+    ->view('bienvenue', ['user' => $user])
+    ->send();</code></pre>
+
+  <h2>Mailable (emails réutilisables)</h2>
+  <div class="code-label"><span>Terminal</span></div>
+  <pre><code class="language-bash">php briko fabrique:mail Bienvenue</code></pre>
+
+  <div class="code-label"><span>app/mailables/BienvenueMail.php</span></div>
+  <pre><code class="language-php">&lt;?php
+namespace App\Mailables;
+
+use Briko\Mail\Mail;
+use Briko\Mail\Mailable;
+use Briko\Mail\MailMessage;
+
+class BienvenueMail extends Mailable
+{
+    public function __construct(private array $user) {}
+
+    public function build(): MailMessage
+    {
+        return Mail::to($this->user['email'])
+            ->subject('Bienvenue !')
+            ->view('bienvenue', ['user' => $this->user]);
+    }
+}</code></pre>
+
+  <div class="code-label"><span>PHP (utilisation)</span></div>
+  <pre><code class="language-php">use App\Mailables\BienvenueMail;
+
+Mail::send(new BienvenueMail($user));</code></pre>
+
+  <h2>Pièces jointes</h2>
+  <div class="code-label"><span>PHP</span></div>
+  <pre><code class="language-php">Mail::to($email)
+    ->subject('Votre facture')
+    ->html($html)
+    ->attach(base_path('storage/factures/facture-1042.pdf'))
+    ->send();</code></pre>
+
+  <div class="page-nav">
+    <a href="#" onclick="nav('sms');return false">
+      <span class="pn-label">← Précédent</span>
+      <span class="pn-title">SMS & OTP</span>
+    </a>
+    <a href="#" class="pn-next" onclick="nav('logging');return false">
+      <span class="pn-label">Suivant →</span>
+      <span class="pn-title">Logging</span>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════ LOGGING ═══════════════════════ -->
+<section class="doc-section" id="sec-logging">
+  <div class="breadcrumb">Docs <span>›</span> Logging</div>
+  <span class="section-badge">Services</span>
+  <h1>Logging</h1>
+
+  <h2>Logger global</h2>
+  <div class="code-label"><span>PHP</span></div>
+  <pre><code class="language-php">// Helper global
+logger('Utilisateur connecté', ['user_id' => 5]);
+logger('Paiement échoué', ['montant' => 5000, 'code' => 'INSUF'], 'error');
+logger('SMS envoyé', ['to' => '+225070000000'], 'info');
+
+// Niveaux : debug | info | warning | error | critical
+logger('Message', $context, 'warning');</code></pre>
+
+  <h2>Logger par canal</h2>
+  <div class="code-label"><span>PHP</span></div>
+  <pre><code class="language-php">use Briko\Foundation\Logger;
+
+Logger::channel('paiements')->info('Paiement reçu', ['montant' => 25000]);
+Logger::channel('api')->warning('Rate limit atteint', ['ip' => '41.190.1.1']);
+Logger::channel('mail')->error('Envoi échoué', ['to' => 'test@ci.ci']);</code></pre>
+
+  <p>Les logs sont écrits dans <code>storage/logs/YYYY-MM-DD-{canal}.log</code> + un log combiné journalier.</p>
+
+  <h2>Format des logs</h2>
+  <div class="code-label"><span>storage/logs/2024-01-15-api.log</span></div>
+  <pre><code class="language-json">{
+  "ts": "2024-01-15T14:32:11+00:00",
+  "request_id": "a3f9b2c1",
+  "level": "INFO",
+  "channel": "api",
+  "message": "Paiement reçu",
+  "elapsed_ms": 42,
+  "memory_kb": 1204,
+  "context": {"montant": 25000}
+}</code></pre>
+
+  <h2>Commandes CLI</h2>
+  <div class="code-label"><span>Terminal</span></div>
+  <pre><code class="language-bash">php briko logs              # 50 dernières lignes (log combiné)
+php briko logs api 100      # 100 dernières lignes du canal "api"
+php briko logs:tail         # Suivre en temps réel
+php briko logs:tail paiements
+php briko logs:clear        # Supprimer tous les logs</code></pre>
+
+  <div class="page-nav">
+    <a href="#" onclick="nav('mail');return false">
+      <span class="pn-label">← Précédent</span>
+      <span class="pn-title">Mail</span>
+    </a>
+    <a href="#" class="pn-next" onclick="nav('offline');return false">
+      <span class="pn-label">Suivant →</span>
+      <span class="pn-title">Offline-First</span>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════ OFFLINE ═══════════════════════ -->
+<section class="doc-section" id="sec-offline">
+  <div class="breadcrumb">Docs <span>›</span> Offline-First</div>
+  <span class="section-badge">Services</span>
+  <h1>Offline-First</h1>
+  <p class="lead">Conçu pour les connexions instables. Le middleware <code>OfflineFirst</code> gère automatiquement les pannes de base de données.</p>
+
+  <h2>Activer</h2>
+  <div class="code-label"><span>app/routes.php</span></div>
+  <pre><code class="language-php">use Briko\Http\Middleware\OfflineFirst;
+
+$router->get('/users', [UserController::class, 'index'], [OfflineFirst::class]);
+$router->post('/orders', [OrderController::class, 'store'], [OfflineFirst::class]);</code></pre>
+
+  <h2>Comportement</h2>
+  <table>
+    <thead><tr><th>Requête</th><th>DB disponible</th><th>DB hors ligne</th></tr></thead>
+    <tbody>
+      <tr><td><code>GET</code></td><td>Réponse normale</td><td>Réponse depuis le cache fichier</td></tr>
+      <tr><td><code>POST / PUT / DELETE</code></td><td>Exécution normale</td><td>Ajouté dans la file d'attente JSON</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Synchronisation</h2>
+  <div class="code-label"><span>Terminal</span></div>
+  <pre><code class="language-bash">php briko sync:status    # Voir les requêtes en attente
+php briko sync           # Rejouer les requêtes (une fois la DB revenue)
+php briko sync:flush     # Vider la file d'attente</code></pre>
+
+  <div class="page-nav">
+    <a href="#" onclick="nav('logging');return false">
+      <span class="pn-label">← Précédent</span>
+      <span class="pn-title">Logging</span>
+    </a>
+    <a href="#" class="pn-next" onclick="nav('cli');return false">
+      <span class="pn-label">Suivant →</span>
+      <span class="pn-title">CLI</span>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════ CLI ═══════════════════════ -->
+<section class="doc-section" id="sec-cli">
+  <div class="breadcrumb">Docs <span>›</span> CLI</div>
+  <span class="section-badge">Outils</span>
+  <h1>CLI — Console</h1>
+  <p class="lead">Toutes les commandes s'exécutent avec <code>php briko &lt;commande&gt;</code>.</p>
+
+  <h2>Référence complète</h2>
+  <table>
+    <thead><tr><th>Commande</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>php briko feu</code></td><td>Démarrer le serveur de développement (port 8000)</td></tr>
+      <tr><td><code>php briko env:setup</code></td><td>Créer <code>.env</code> depuis <code>.env.example</code></td></tr>
+      <tr><td><code>php briko migrate</code></td><td>Exécuter les migrations en attente</td></tr>
+      <tr><td><code>php briko migrate:status</code></td><td>État de chaque migration</td></tr>
+      <tr><td><code>php briko migrate:rollback</code></td><td>Annuler le dernier batch</td></tr>
+      <tr><td><code>php briko migrate:fresh</code></td><td>Tout supprimer et rejouer</td></tr>
+      <tr><td><code>php briko sync</code></td><td>Rejouer la file d'attente offline</td></tr>
+      <tr><td><code>php briko sync:status</code></td><td>Voir la file d'attente</td></tr>
+      <tr><td><code>php briko sync:flush</code></td><td>Vider la file d'attente</td></tr>
+      <tr><td><code>php briko logs [canal] [n]</code></td><td>Afficher les N dernières lignes</td></tr>
+      <tr><td><code>php briko logs:tail [canal]</code></td><td>Suivre les logs en temps réel</td></tr>
+      <tr><td><code>php briko logs:clear</code></td><td>Supprimer tous les fichiers de log</td></tr>
+      <tr><td><code>php briko sms:test &lt;numéro&gt;</code></td><td>Envoyer un SMS de test</td></tr>
+      <tr><td><code>php briko sms:otp &lt;numéro&gt;</code></td><td>Générer et envoyer un OTP</td></tr>
+      <tr><td><code>php briko sms:driver</code></td><td>Afficher la config SMS active</td></tr>
+      <tr><td><code>php briko mail:test &lt;email&gt;</code></td><td>Envoyer un email de test</td></tr>
+      <tr><td><code>php briko mail:driver</code></td><td>Afficher la config Mail active</td></tr>
+      <tr><td><code>php briko fabrique:controller &lt;Nom&gt;</code></td><td>Créer un controller REST</td></tr>
+      <tr><td><code>php briko fabrique:model &lt;Nom&gt;</code></td><td>Créer un modèle</td></tr>
+      <tr><td><code>php briko fabrique:mail &lt;Nom&gt;</code></td><td>Créer un Mailable + template</td></tr>
+      <tr><td><code>php briko help</code></td><td>Afficher l'aide</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-nav">
+    <a href="#" onclick="nav('offline');return false">
+      <span class="pn-label">← Précédent</span>
+      <span class="pn-title">Offline-First</span>
+    </a>
+    <a href="#" class="pn-next" onclick="nav('helpers');return false">
+      <span class="pn-label">Suivant →</span>
+      <span class="pn-title">Helpers</span>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════ HELPERS ═══════════════════════ -->
+<section class="doc-section" id="sec-helpers">
+  <div class="breadcrumb">Docs <span>›</span> Helpers</div>
+  <span class="section-badge">Outils</span>
+  <h1>Helpers globaux</h1>
+
+  <table>
+    <thead><tr><th>Fonction</th><th>Description</th><th>Exemple</th></tr></thead>
+    <tbody>
+      <tr><td><code>env($key, $default)</code></td><td>Lire une variable .env</td><td><code>env('APP_NAME')</code></td></tr>
+      <tr><td><code>db($table)</code></td><td>Query Builder sur une table</td><td><code>db('users')->get()</code></td></tr>
+      <tr><td><code>sms($to)</code></td><td>Créer un message SMS</td><td><code>sms('+225...')->message('...')</code></td></tr>
+      <tr><td><code>mail_to($email)</code></td><td>Créer un message Mail</td><td><code>mail_to('a@b.ci')->subject('...')</code></td></tr>
+      <tr><td><code>logger($msg, $ctx, $level)</code></td><td>Écrire un log</td><td><code>logger('Erreur', [], 'error')</code></td></tr>
+      <tr><td><code>base_path($path)</code></td><td>Chemin absolu depuis la racine</td><td><code>base_path('storage/file.pdf')</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-nav">
+    <a href="#" onclick="nav('cli');return false">
+      <span class="pn-label">← Précédent</span>
+      <span class="pn-title">CLI</span>
+    </a>
+    <a href="#" class="pn-next" onclick="nav('tuto-api');return false">
+      <span class="pn-label">Suivant →</span>
+      <span class="pn-title">Tutoriel API REST A→Z</span>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════ TUTORIEL API ═══════════════════════ -->
+<section class="doc-section" id="sec-tuto-api">
+  <div class="breadcrumb">Docs <span>›</span> Tutoriels</div>
+  <span class="section-badge">Tutoriel</span>
+  <h1>🔥 API REST — de A à Z</h1>
+  <p class="lead">Construis une API complète de gestion de tâches avec authentification par token, CRUD complet et vérification OTP.</p>
+
+  <div class="callout callout-info">
+    <strong>Ce que tu vas construire :</strong> une API REST <code>/api/tasks</code> avec authentification, CRUD, pagination, OTP SMS et notifications mail.
+  </div>
+
+  <h2>1. Créer le projet</h2>
+  <div class="tuto-step">
+    <div class="tuto-step-header"><div class="tuto-num">1</div><div class="tuto-step-title">Installation & configuration</div></div>
+    <div class="tuto-step-body">
+      <div class="code-label"><span>Terminal</span></div>
+      <pre><code class="language-bash">composer create-project brikocode/framework taskapi
+cd taskapi
+php briko env:setup</code></pre>
+      <p>Édite <code>.env</code> :</p>
+      <div class="code-label"><span>.env</span></div>
+      <pre><code class="language-bash">APP_NAME=TaskAPI
+APP_ENV=local
+APP_URL=http://localhost:8000
+
+DB_DRIVER=mysql
+DB_HOST=127.0.0.1
+DB_NAME=taskapi
+DB_USER=root
+DB_PASS=
+
+SMS_DRIVER=log
+MAIL_DRIVER=log</code></pre>
+    </div>
+  </div>
+
+  <h2>2. Migrations</h2>
+  <div class="tuto-step">
+    <div class="tuto-step-header"><div class="tuto-num">2</div><div class="tuto-step-title">Créer les tables</div></div>
+    <div class="tuto-step-body">
+      <div class="code-label"><span>database/migrations/2024_01_01_000001_create_users_table.php</span></div>
+      <pre><code class="language-php">&lt;?php
+return [
+    'up' => function (PDO $pdo): void {
+        $pdo->exec("
+            CREATE TABLE users (
+                id        INT AUTO_INCREMENT PRIMARY KEY,
+                nom       VARCHAR(100) NOT NULL,
+                email     VARCHAR(150) NOT NULL UNIQUE,
+                telephone VARCHAR(20),
+                token     VARCHAR(64),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ");
+    },
+    'down' => fn(PDO $pdo) => $pdo->exec("DROP TABLE IF EXISTS users"),
+];</code></pre>
+      <div class="code-label"><span>database/migrations/2024_01_01_000002_create_tasks_table.php</span></div>
+      <pre><code class="language-php">&lt;?php
+return [
+    'up' => function (PDO $pdo): void {
+        $pdo->exec("
+            CREATE TABLE tasks (
+                id          INT AUTO_INCREMENT PRIMARY KEY,
+                user_id     INT NOT NULL,
+                titre       VARCHAR(200) NOT NULL,
+                description TEXT,
+                statut      ENUM('todo','en_cours','fait') DEFAULT 'todo',
+                priorite    TINYINT DEFAULT 1,
+                created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        ");
+    },
+    'down' => fn(PDO $pdo) => $pdo->exec("DROP TABLE IF EXISTS tasks"),
+];</code></pre>
+      <div class="code-label"><span>Terminal</span></div>
+      <pre><code class="language-bash">php briko migrate</code></pre>
+    </div>
+  </div>
+
+  <h2>3. Middleware d'authentification</h2>
+  <div class="tuto-step">
+    <div class="tuto-step-header"><div class="tuto-num">3</div><div class="tuto-step-title">Token Bearer</div></div>
+    <div class="tuto-step-body">
+      <div class="code-label"><span>app/Middleware/BearerAuth.php</span></div>
+      <pre><code class="language-php">&lt;?php
+namespace App\Middleware;
+
+use Briko\Http\Middleware\MiddlewareInterface;
+use Briko\Http\Request;
+
+class BearerAuth implements MiddlewareInterface
+{
+    public function handle(Request $request, callable $next): mixed
+    {
+        $header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        $token  = str_replace('Bearer ', '', $header);
+
+        if (!$token) {
+            return ['error' => 'Token manquant', '_status' => 401];
+        }
+
+        $user = db('users')->where('token', $token)->first();
+        if (!$user) {
+            return ['error' => 'Token invalide', '_status' => 401];
+        }
+
+        // Injecte l'utilisateur dans la requête
+        $_REQUEST['_auth_user'] = $user;
+
+        return $next($request);
+    }
+}</code></pre>
+    </div>
+  </div>
+
+  <h2>4. Controllers</h2>
+  <div class="tuto-step">
+    <div class="tuto-step-header"><div class="tuto-num">4</div><div class="tuto-step-title">AuthController + TaskController</div></div>
+    <div class="tuto-step-body">
+      <div class="code-label"><span>Terminal</span></div>
+      <pre><code class="language-bash">php briko fabrique:controller AuthController
+php briko fabrique:controller TaskController</code></pre>
+      <div class="code-label"><span>app/controllers/AuthController.php</span></div>
+      <pre><code class="language-php">&lt;?php
+namespace App\Controllers;
+
+use Briko\Http\Request;
+use Briko\Sms\SMS;
+
+class AuthController
+{
+    // POST /api/register
+    public function register(Request $request): array
+    {
+        $data = $request->all();
+
+        if (empty($data['email']) || empty($data['nom'])) {
+            return ['error' => 'nom et email requis', '_status' => 422];
+        }
+
+        if (db('users')->where('email', $data['email'])->exists()) {
+            return ['error' => 'Email déjà utilisé', '_status' => 409];
+        }
+
+        $token = bin2hex(random_bytes(32));
+        $id    = db('users')->insertGetId([
+            'nom'       => $data['nom'],
+            'email'     => $data['email'],
+            'telephone' => $data['telephone'] ?? null,
+            'token'     => $token,
+        ]);
+
+        // Email de bienvenue
+        mail_to($data['email'])
+            ->subject('Bienvenue sur ' . env('APP_NAME'))
+            ->html('&lt;h2&gt;Bienvenue, ' . htmlspecialchars($data['nom']) . ' !&lt;/h2&gt;')
+            ->send();
+
+        return ['id' => $id, 'token' => $token, '_status' => 201];
+    }
+
+    // POST /api/otp/send
+    public function sendOtp(Request $request): array
+    {
+        $phone = $request->input('telephone');
+        if (!$phone) return ['error' => 'téléphone requis', '_status' => 422];
+
+        SMS::otp($phone);
+        return ['message' => 'OTP envoyé'];
+    }
+
+    // POST /api/otp/verify
+    public function verifyOtp(Request $request): array
+    {
+        $phone = $request->input('telephone');
+        $code  = $request->input('code');
+
+        if (SMS::verifyOtp($phone, $code)) {
+            return ['verified' => true];
+        }
+        return ['error' => 'Code invalide ou expiré', '_status' => 400];
+    }
+}</code></pre>
+
+      <div class="code-label"><span>app/controllers/TaskController.php</span></div>
+      <pre><code class="language-php">&lt;?php
+namespace App\Controllers;
+
+use Briko\Http\Request;
+
+class TaskController
+{
+    private function authUser(): array
+    {
+        return $_REQUEST['_auth_user'];
+    }
+
+    // GET /api/tasks
+    public function index(Request $request): array
+    {
+        $user = $this->authUser();
+        return db('tasks')
+            ->where('user_id', $user['id'])
+            ->orderBy('created_at', 'DESC')
+            ->paginate(20);
+    }
+
+    // GET /api/tasks/{id}
+    public function show(Request $request): array
+    {
+        $user = $this->authUser();
+        $task = db('tasks')
+            ->where('id', $request->param('id'))
+            ->where('user_id', $user['id'])
+            ->first();
+
+        if (!$task) return ['error' => 'Tâche introuvable', '_status' => 404];
+        return $task;
+    }
+
+    // POST /api/tasks
+    public function store(Request $request): array
+    {
+        $user = $this->authUser();
+        $data = $request->all();
+
+        if (empty($data['titre'])) {
+            return ['error' => 'Le titre est requis', '_status' => 422];
+        }
+
+        $id = db('tasks')->insertGetId([
+            'user_id'     => $user['id'],
+            'titre'       => $data['titre'],
+            'description' => $data['description'] ?? null,
+            'priorite'    => $data['priorite'] ?? 1,
+        ]);
+
+        return ['id' => $id, 'created' => true, '_status' => 201];
+    }
+
+    // PUT /api/tasks/{id}
+    public function update(Request $request): array
+    {
+        $user   = $this->authUser();
+        $taskId = $request->param('id');
+        $task   = db('tasks')->where('id', $taskId)->where('user_id', $user['id'])->first();
+
+        if (!$task) return ['error' => 'Tâche introuvable', '_status' => 404];
+
+        $data = array_filter($request->all(), fn($v) => $v !== null);
+        unset($data['user_id']);
+
+        db('tasks')->where('id', $taskId)->update($data);
+        return ['updated' => true];
+    }
+
+    // DELETE /api/tasks/{id}
+    public function destroy(Request $request): array
+    {
+        $user   = $this->authUser();
+        $taskId = $request->param('id');
+        $task   = db('tasks')->where('id', $taskId)->where('user_id', $user['id'])->first();
+
+        if (!$task) return ['error' => 'Tâche introuvable', '_status' => 404];
+
+        db('tasks')->where('id', $taskId)->delete();
+        return ['deleted' => true];
+    }
+}</code></pre>
+    </div>
+  </div>
+
+  <h2>5. Routes</h2>
+  <div class="tuto-step">
+    <div class="tuto-step-header"><div class="tuto-num">5</div><div class="tuto-step-title">Définir les routes</div></div>
+    <div class="tuto-step-body">
+      <div class="code-label"><span>app/routes.php</span></div>
+      <pre><code class="language-php">&lt;?php
+use App\Controllers\AuthController;
+use App\Controllers\TaskController;
+use App\Middleware\BearerAuth;
+
+/** @var \Briko\Routing\Router $router */
+
+// Auth (publiques)
+$router->post('/api/register',    [AuthController::class, 'register']);
+$router->post('/api/otp/send',    [AuthController::class, 'sendOtp']);
+$router->post('/api/otp/verify',  [AuthController::class, 'verifyOtp']);
+
+// Tasks (protégées)
+$router->get('/api/tasks',        [TaskController::class, 'index'],   [BearerAuth::class]);
+$router->get('/api/tasks/{id}',   [TaskController::class, 'show'],    [BearerAuth::class]);
+$router->post('/api/tasks',       [TaskController::class, 'store'],   [BearerAuth::class]);
+$router->put('/api/tasks/{id}',   [TaskController::class, 'update'],  [BearerAuth::class]);
+$router->delete('/api/tasks/{id}',[TaskController::class, 'destroy'], [BearerAuth::class]);</code></pre>
+    </div>
+  </div>
+
+  <h2>6. Tester l'API</h2>
+  <div class="tuto-step">
+    <div class="tuto-step-header"><div class="tuto-num">6</div><div class="tuto-step-title">curl / Postman</div></div>
+    <div class="tuto-step-body">
+      <div class="code-label"><span>Terminal</span></div>
+      <pre><code class="language-bash"># Lancer le serveur
+php briko feu
+
+# S'inscrire
+curl -X POST http://localhost:8000/api/register \
+  -H "Content-Type: application/json" \
+  -d '{"nom":"Aya Koné","email":"aya@ci.ci","telephone":"+225070000000"}'
+# → {"id":1,"token":"abc123..."}
+
+# Créer une tâche
+curl -X POST http://localhost:8000/api/tasks \
+  -H "Authorization: Bearer abc123..." \
+  -H "Content-Type: application/json" \
+  -d '{"titre":"Finir le rapport","priorite":2}'
+# → {"id":1,"created":true}
+
+# Lister les tâches
+curl http://localhost:8000/api/tasks \
+  -H "Authorization: Bearer abc123..."
+
+# Mettre à jour le statut
+curl -X PUT http://localhost:8000/api/tasks/1 \
+  -H "Authorization: Bearer abc123..." \
+  -H "Content-Type: application/json" \
+  -d '{"statut":"fait"}'</code></pre>
+    </div>
+  </div>
+
+  <div class="callout callout-tip">
+    <strong>🎉 API complète !</strong> Tu as une API REST fonctionnelle avec auth, CRUD, pagination, OTP SMS et notifications mail — en moins de 100 lignes de code applicatif.
+  </div>
+
+  <div class="page-nav">
+    <a href="#" onclick="nav('helpers');return false">
+      <span class="pn-label">← Précédent</span>
+      <span class="pn-title">Helpers</span>
+    </a>
+    <a href="#" class="pn-next" onclick="nav('tuto-projet');return false">
+      <span class="pn-label">Suivant →</span>
+      <span class="pn-title">Projet complet A→Z</span>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════ TUTORIEL PROJET ═══════════════════════ -->
+<section class="doc-section" id="sec-tuto-projet">
+  <div class="breadcrumb">Docs <span>›</span> Tutoriels</div>
+  <span class="section-badge">Tutoriel</span>
+  <h1>🚀 Projet complet — de A à Z</h1>
+  <p class="lead">Une application de gestion de commandes avec auth SMS OTP, produits, commandes, emails de confirmation et mode offline.</p>
+
+  <div class="callout callout-info">
+    <strong>Ce que tu vas construire :</strong> API e-commerce — catalogue produits, panier, commandes, vérification OTP, emails de confirmation, mode offline-first.
+  </div>
+
+  <h2>1. Setup</h2>
+  <div class="tuto-step">
+    <div class="tuto-step-header"><div class="tuto-num">1</div><div class="tuto-step-title">Création du projet</div></div>
+    <div class="tuto-step-body">
+      <div class="code-label"><span>Terminal</span></div>
+      <pre><code class="language-bash">composer create-project brikocode/framework boutique
+cd boutique
+php briko env:setup</code></pre>
+      <div class="code-label"><span>.env</span></div>
+      <pre><code class="language-bash">APP_NAME=Boutique
+DB_NAME=boutique
+SMS_DRIVER=africastalking
+AT_USERNAME=boutique
+AT_API_KEY=ta_cle_api
+AT_SANDBOX=false
+MAIL_DRIVER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=ta@gmail.com
+MAIL_PASSWORD=mot_de_passe_app</code></pre>
+    </div>
+  </div>
+
+  <h2>2. Base de données</h2>
+  <div class="tuto-step">
+    <div class="tuto-step-header"><div class="tuto-num">2</div><div class="tuto-step-title">3 tables : users, produits, commandes</div></div>
+    <div class="tuto-step-body">
+      <div class="code-label"><span>database/migrations/2024_01_01_000001_create_users_table.php</span></div>
+      <pre><code class="language-php">return [
+    'up' => function(PDO $pdo) {
+        $pdo->exec("CREATE TABLE users (
+            id         INT AUTO_INCREMENT PRIMARY KEY,
+            nom        VARCHAR(100) NOT NULL,
+            telephone  VARCHAR(20) NOT NULL UNIQUE,
+            email      VARCHAR(150),
+            token      VARCHAR(64),
+            verifie    TINYINT DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )");
+    },
+    'down' => fn($p) => $p->exec("DROP TABLE IF EXISTS users"),
+];</code></pre>
+      <div class="code-label"><span>database/migrations/2024_01_01_000002_create_produits_table.php</span></div>
+      <pre><code class="language-php">return [
+    'up' => function(PDO $pdo) {
+        $pdo->exec("CREATE TABLE produits (
+            id         INT AUTO_INCREMENT PRIMARY KEY,
+            nom        VARCHAR(200) NOT NULL,
+            prix       DECIMAL(10,0) NOT NULL,
+            stock      INT DEFAULT 0,
+            categorie  VARCHAR(100),
+            actif      TINYINT DEFAULT 1
+        )");
+    },
+    'down' => fn($p) => $p->exec("DROP TABLE IF EXISTS produits"),
+];</code></pre>
+      <div class="code-label"><span>database/migrations/2024_01_01_000003_create_commandes_table.php</span></div>
+      <pre><code class="language-php">return [
+    'up' => function(PDO $pdo) {
+        $pdo->exec("CREATE TABLE commandes (
+            id         INT AUTO_INCREMENT PRIMARY KEY,
+            user_id    INT NOT NULL,
+            produit_id INT NOT NULL,
+            quantite   INT DEFAULT 1,
+            total      DECIMAL(10,0),
+            statut     ENUM('en_attente','payee','livree') DEFAULT 'en_attente',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (produit_id) REFERENCES produits(id)
+        )");
+    },
+    'down' => fn($p) => $p->exec("DROP TABLE IF EXISTS commandes"),
+];</code></pre>
+      <div class="code-label"><span>Terminal</span></div>
+      <pre><code class="language-bash">php briko migrate</code></pre>
+    </div>
+  </div>
+
+  <h2>3. Auth OTP par SMS</h2>
+  <div class="tuto-step">
+    <div class="tuto-step-header"><div class="tuto-num">3</div><div class="tuto-step-title">Inscription + vérification numéro</div></div>
+    <div class="tuto-step-body">
+      <div class="code-label"><span>app/controllers/AuthController.php</span></div>
+      <pre><code class="language-php">&lt;?php
+namespace App\Controllers;
+
+use Briko\Http\Request;
+use Briko\Sms\SMS;
+
+class AuthController
+{
+    // POST /auth/register — étape 1 : enregistrement
+    public function register(Request $request): array
+    {
+        $tel = $request->input('telephone');
+        $nom = $request->input('nom');
+        if (!$tel || !$nom) return ['error' => 'nom et telephone requis', '_status' => 422];
+
+        $user = db('users')->where('telephone', $tel)->first();
+        if (!$user) {
+            db('users')->insert(['nom' => $nom, 'telephone' => $tel]);
+        }
+
+        SMS::otp($tel);  // Envoie le code
+        return ['message' => 'Code OTP envoyé au ' . $tel];
+    }
+
+    // POST /auth/verify — étape 2 : vérification OTP
+    public function verify(Request $request): array
+    {
+        $tel  = $request->input('telephone');
+        $code = $request->input('code');
+
+        if (!SMS::verifyOtp($tel, $code)) {
+            return ['error' => 'Code invalide ou expiré', '_status' => 400];
+        }
+
+        $token = bin2hex(random_bytes(32));
+        db('users')->where('telephone', $tel)->update([
+            'token'   => $token,
+            'verifie' => 1,
+        ]);
+
+        $user = db('users')->where('telephone', $tel)->first();
+
+        // Mail de bienvenue si email renseigné
+        if (!empty($user['email'])) {
+            mail_to($user['email'])
+                ->subject('Bienvenue sur ' . env('APP_NAME'))
+                ->view('bienvenue', ['user' => $user])
+                ->send();
+        }
+
+        return ['token' => $token, 'user' => $user];
+    }
+}</code></pre>
+    </div>
+  </div>
+
+  <h2>4. Catalogue & Commandes</h2>
+  <div class="tuto-step">
+    <div class="tuto-step-header"><div class="tuto-num">4</div><div class="tuto-step-title">ProduitController + CommandeController</div></div>
+    <div class="tuto-step-body">
+      <div class="code-label"><span>app/controllers/ProduitController.php</span></div>
+      <pre><code class="language-php">&lt;?php
+namespace App\Controllers;
+
+use Briko\Http\Request;
+
+class ProduitController
+{
+    // GET /produits — liste avec mode offline-first
+    public function index(Request $request): array
+    {
+        return db('produits')
+            ->where('actif', 1)
+            ->orderBy('nom')
+            ->paginate(20);
+    }
+
+    // GET /produits/{id}
+    public function show(Request $request): array
+    {
+        $p = db('produits')->find($request->param('id'));
+        if (!$p) return ['error' => 'Produit introuvable', '_status' => 404];
+        return $p;
+    }
+}
+
+</code></pre>
+      <div class="code-label"><span>app/controllers/CommandeController.php</span></div>
+      <pre><code class="language-php">&lt;?php
+namespace App\Controllers;
+
+use Briko\Http\Request;
+
+class CommandeController
+{
+    private function authUser(): array
+    {
+        return $_REQUEST['_auth_user'];
+    }
+
+    // POST /commandes
+    public function store(Request $request): array
+    {
+        $user   = $this->authUser();
+        $data   = $request->all();
+        $qte    = max(1, (int)($data['quantite'] ?? 1));
+
+        $produit = db('produits')->find($data['produit_id'] ?? 0);
+        if (!$produit) return ['error' => 'Produit introuvable', '_status' => 404];
+        if ($produit['stock'] < $qte) return ['error' => 'Stock insuffisant', '_status' => 400];
+
+        $total = $produit['prix'] * $qte;
+
+        $id = db('commandes')->insertGetId([
+            'user_id'    => $user['id'],
+            'produit_id' => $produit['id'],
+            'quantite'   => $qte,
+            'total'      => $total,
+        ]);
+
+        // Décrémenter le stock
+        db('produits')->where('id', $produit['id'])
+            ->update(['stock' => $produit['stock'] - $qte]);
+
+        // SMS de confirmation
+        sms($user['telephone'])
+            ->message("Commande #{$id} confirmée ! Total : {$total} FCFA")
+            ->send();
+
+        // Email si disponible
+        if (!empty($user['email'])) {
+            mail_to($user['email'])
+                ->subject("Commande #{$id} confirmée")
+                ->html("
+                    &lt;h2&gt;Commande #{$id} confirmée !&lt;/h2&gt;
+                    &lt;p&gt;Produit : {$produit['nom']}&lt;/p&gt;
+                    &lt;p&gt;Quantité : {$qte}&lt;/p&gt;
+                    &lt;p&gt;&lt;strong&gt;Total : {$total} FCFA&lt;/strong&gt;&lt;/p&gt;
+                ")
+                ->send();
+        }
+
+        return ['id' => $id, 'total' => $total, '_status' => 201];
+    }
+
+    // GET /commandes
+    public function index(Request $request): array
+    {
+        $user = $this->authUser();
+        return db('commandes')->where('user_id', $user['id'])
+            ->orderBy('created_at', 'DESC')->paginate(20);
+    }
+}</code></pre>
+    </div>
+  </div>
+
+  <h2>5. Routes finales</h2>
+  <div class="tuto-step">
+    <div class="tuto-step-header"><div class="tuto-num">5</div><div class="tuto-step-title">Routes avec middlewares</div></div>
+    <div class="tuto-step-body">
+      <div class="code-label"><span>app/routes.php</span></div>
+      <pre><code class="language-php">&lt;?php
+use App\Controllers\AuthController;
+use App\Controllers\ProduitController;
+use App\Controllers\CommandeController;
+use App\Middleware\BearerAuth;
+use Briko\Http\Middleware\OfflineFirst;
+use Briko\Http\Middleware\LowBandwidth;
+
+/** @var \Briko\Routing\Router $router */
+
+// Auth
+$router->post('/auth/register', [AuthController::class, 'register']);
+$router->post('/auth/verify',   [AuthController::class, 'verify']);
+
+// Produits (publics + offline-first + low bandwidth)
+$router->get('/produits',      [ProduitController::class, 'index'], [OfflineFirst::class, LowBandwidth::class]);
+$router->get('/produits/{id}', [ProduitController::class, 'show'],  [OfflineFirst::class]);
+
+// Commandes (protégées)
+$router->post('/commandes',    [CommandeController::class, 'store'], [BearerAuth::class]);
+$router->get('/commandes',     [CommandeController::class, 'index'], [BearerAuth::class]);</code></pre>
+    </div>
+  </div>
+
+  <h2>6. Test complet</h2>
+  <div class="tuto-step">
+    <div class="tuto-step-header"><div class="tuto-num">6</div><div class="tuto-step-title">Scénario de bout en bout</div></div>
+    <div class="tuto-step-body">
+      <div class="code-label"><span>Terminal</span></div>
+      <pre><code class="language-bash">php briko feu
+
+# 1. S'inscrire et recevoir l'OTP
+curl -X POST http://localhost:8000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"nom":"Aya","telephone":"+225070000000"}'
+
+# 2. Vérifier l'OTP (vérifie les logs si SMS_DRIVER=log)
+php briko logs            # → voir le code OTP
+
+curl -X POST http://localhost:8000/auth/verify \
+  -H "Content-Type: application/json" \
+  -d '{"telephone":"+225070000000","code":"482931"}'
+# → {"token":"abc...","user":{...}}
+
+# 3. Voir les produits
+curl http://localhost:8000/produits
+
+# 4. Passer une commande
+curl -X POST http://localhost:8000/commandes \
+  -H "Authorization: Bearer abc..." \
+  -H "Content-Type: application/json" \
+  -d '{"produit_id":1,"quantite":2}'
+# → SMS + email de confirmation envoyés !</code></pre>
+    </div>
+  </div>
+
+  <div class="callout callout-tip">
+    <strong>🏆 Projet complet !</strong> Tu as une application avec inscription OTP SMS, catalogue produits offline-first, commandes avec SMS + email de confirmation — le tout avec Brikocode, zéro dépendance externe.
+  </div>
+
+  <div class="page-nav">
+    <a href="#" onclick="nav('tuto-api');return false">
+      <span class="pn-label">← Précédent</span>
+      <span class="pn-title">API REST A→Z</span>
+    </a>
+    <div></div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>
+// ── Init highlight.js ──
+hljs.highlightAll();
+
+// ── Navigation ──
+function nav(id) {
+  document.querySelectorAll('.doc-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+
+  const sec = document.getElementById('sec-' + id);
+  if (sec) {
+    sec.classList.add('active');
+    window.scrollTo({top: 0, behavior: 'instant'});
+  }
+
+  const link = document.querySelector('.sidebar a[data-section="' + id + '"]');
+  if (link) {
+    link.classList.add('active');
+    link.scrollIntoView({block: 'nearest'});
+  }
+
+  // Close mobile sidebar
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+
+  history.pushState(null, '', '#' + id);
+}
+
+// ── Sidebar links ──
+document.querySelectorAll('.sidebar a[data-section]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    nav(a.dataset.section);
+  });
+});
+
+// ── Mobile hamburger ──
+document.getElementById('hamburger').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('open');
+});
+document.getElementById('overlay').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+});
+
+// ── Copy buttons ──
+document.querySelectorAll('.copy-btn[data-copy]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    navigator.clipboard.writeText(btn.dataset.copy).then(() => {
+      btn.textContent = 'Copié !';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copier'; btn.classList.remove('copied'); }, 1500);
+    });
+  });
+});
+
+// Auto copy for all code blocks
+document.querySelectorAll('.code-label').forEach(label => {
+  const pre = label.nextElementSibling;
+  if (!pre || !pre.querySelector('code')) return;
+  if (label.querySelector('.copy-btn[data-copy]')) return;
+
+  const btn = document.createElement('button');
+  btn.className = 'copy-btn';
+  btn.textContent = 'Copier';
+  btn.addEventListener('click', () => {
+    const code = pre.querySelector('code').innerText;
+    navigator.clipboard.writeText(code).then(() => {
+      btn.textContent = 'Copié !';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copier'; btn.classList.remove('copied'); }, 1500);
+    });
+  });
+  label.appendChild(btn);
+});
+
+// ── Hash routing ──
+const hash = location.hash.replace('#', '');
+if (hash) nav(hash);
+
+// ── Handle back/forward ──
+window.addEventListener('popstate', () => {
+  const h = location.hash.replace('#', '');
+  if (h) nav(h);
+});
+</script>
+</body>
+</html>
