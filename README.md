@@ -14,12 +14,12 @@
 5. [Request](#request)
 6. [Response](#response)
 7. [Middleware](#middleware)
-8. [Base de données — grenier](#base-de-données--grenier)
+8. [Base de données — database](#base-de-données--database)
 9. [Offline-First](#offline-first)
 10. [Mode Low Bandwidth](#mode-low-bandwidth)
-11. [SMS — tamtam](#sms--tamtam)
+11. [SMS — sms](#sms--sms)
 12. [Logging](#logging)
-13. [CLI — djassa](#cli--djassa)
+13. [CLI — console](#cli--console)
 14. [Helpers globaux](#helpers-globaux)
 15. [Générateurs de code](#générateurs-de-code)
 16. [Licence](#licence)
@@ -49,14 +49,14 @@ php briko feu
 ```
 brikocode/
 │
-├── core/                     Noyau applicatif
+├── foundation/                     Noyau applicatif
 │   ├── App.php               Bootstrap : charge .env, boot Logger, instancie Kernel
 │   ├── Container.php         Conteneur d'injection de dépendances
 │   ├── Env.php               Parseur .env natif
 │   ├── Logger.php            Système de logs structurés (+ LogChannel)
 │   └── helpers.php           Fonctions globales : env(), db(), sms(), logger(), base_path()
 │
-├── gbaka/                    Couche HTTP  (gbaka = gbaka = minibus ivoirien)
+├── http/                    Couche HTTP
 │   ├── Kernel.php            Reçoit la requête, dispatche, envoie la réponse
 │   ├── Request.php           Abstraction de la requête HTTP
 │   ├── Response.php          Envoi de réponse JSON/HTML avec gzip optionnel
@@ -68,17 +68,17 @@ brikocode/
 │       ├── LowBandwidth.php  Gzip + sélection de champs + strip nulls
 │       └── HttpLogger.php    Log automatique de chaque requête HTTP
 │
-├── itineraire/               Routeur  (itinéraire = chemin)
+├── routing/               Routeur  (itinéraire = chemin)
 │   └── Router.php            Routes dynamiques, tous verbes HTTP, middleware par route
 │
-├── grenier/                  Base de données  (grenier = là où l'on stocke)
+├── database/                  Base de données
 │   ├── Connection.php        Connexion PDO singleton (MySQL, PostgreSQL, SQLite)
 │   ├── QueryBuilder.php      Query Builder fluide
 │   ├── DB.php                Facade statique
 │   ├── OfflineQueue.php      File d'attente JSON pour requêtes hors ligne
 │   └── ResponseCache.php     Cache fichier des réponses GET
 │
-├── tamtam/                   SMS  (tam-tam = système de communication originel d'Afrique)
+├── sms/                   SMS
 │   ├── SMS.php               Facade statique (envoi + OTP)
 │   ├── SmsMessage.php        Constructeur de message fluide
 │   ├── SmsResult.php         Objet résultat d'un envoi
@@ -91,10 +91,10 @@ brikocode/
 │       ├── HttpDriver.php            HTTP générique (Orange CI, MTN, Moov…)
 │       └── LogDriver.php             Développement — SMS dans les logs
 │
-├── djassa/                   CLI  (djassa = l'ambiance, la rush)
+├── console/                   CLI
 │   └── Console.php           Toutes les commandes briko
 │
-├── village/                  Ton application
+├── app/                  Ton application
 │   ├── routes.php            Définition des routes
 │   ├── controllers/          Tes controllers
 │   └── models/               Tes models
@@ -171,7 +171,7 @@ SMS_HTTP_SUCCESS_CODE=200
 
 ## Routing
 
-Les routes sont définies dans `village/routes.php`.
+Les routes sont définies dans `app/routes.php`.
 
 ### Verbes HTTP
 
@@ -200,9 +200,9 @@ $router->get('/salut', fn () => 'Gbaka est en route 🚐');
 ### Middleware par route
 
 ```php
-use Briko\gbaka\Middleware\OfflineFirst;
-use Briko\gbaka\Middleware\LowBandwidth;
-use Briko\gbaka\Middleware\HttpLogger;
+use Briko\Http\Middleware\OfflineFirst;
+use Briko\Http\Middleware\LowBandwidth;
+use Briko\Http\Middleware\HttpLogger;
 
 $router->get('/users',     [UserController::class, 'index'],  [HttpLogger::class, OfflineFirst::class]);
 $router->get('/api/light', [ApiController::class, 'data'],    [LowBandwidth::class]);
@@ -216,7 +216,7 @@ $router->post('/users',    [UserController::class, 'store'],  [HttpLogger::class
 ## Request
 
 ```php
-use Briko\gbaka\Request;
+use Briko\Http\Request;
 
 public function show(Request $request): array
 {
@@ -254,7 +254,7 @@ public function show(Request $request): array
 ## Response
 
 ```php
-use Briko\gbaka\Response;
+use Briko\Http\Response;
 
 // JSON automatique si array/object (défaut)
 return ['status' => 'ok', 'data' => $users];
@@ -285,10 +285,10 @@ Les réponses JSON incluent automatiquement `JSON_UNESCAPED_UNICODE` — les car
 
 ```php
 <?php
-namespace Briko\village\middleware;
+namespace App\middleware;
 
-use Briko\gbaka\Middleware\MiddlewareInterface;
-use Briko\gbaka\Request;
+use Briko\Http\Middleware\MiddlewareInterface;
+use Briko\Http\Request;
 
 class AuthMiddleware implements MiddlewareInterface
 {
@@ -318,14 +318,14 @@ $router->get('/admin', [AdminController::class, 'index'], [AuthMiddleware::class
 
 ---
 
-## Base de données — grenier
+## Base de données — database
 
 ### Connexion
 
 La connexion est gérée automatiquement via `.env`. Aucun code d'initialisation requis.
 
 ```php
-use Briko\grenier\DB;
+use Briko\Database\DB;
 ```
 
 ### Lecture
@@ -431,7 +431,7 @@ php briko sync      → rejoue les requêtes en file via le routeur interne
 ### Activer par route
 
 ```php
-use Briko\gbaka\Middleware\OfflineFirst;
+use Briko\Http\Middleware\OfflineFirst;
 
 $router->get('/produits',        [ProduitController::class, 'index'],  [OfflineFirst::class]);
 $router->post('/commandes',      [CommandeController::class, 'store'], [OfflineFirst::class]);
@@ -483,8 +483,8 @@ $router->get('/produits', [ProduitController::class, 'index'], [
 ### Cache manuel
 
 ```php
-use Briko\grenier\ResponseCache;
-use Briko\grenier\OfflineQueue;
+use Briko\Database\ResponseCache;
+use Briko\Database\OfflineQueue;
 
 // Cache
 ResponseCache::set('/produits', $data, 600);
@@ -510,7 +510,7 @@ Réduit la taille des réponses pour les connexions lentes.
 ### Activer par route
 
 ```php
-use Briko\gbaka\Middleware\LowBandwidth;
+use Briko\Http\Middleware\LowBandwidth;
 
 $router->get('/users', [UserController::class, 'index'], [LowBandwidth::class]);
 
@@ -557,7 +557,7 @@ X-Compressed-Size: 312B
 
 ---
 
-## SMS — tamtam
+## SMS — sms
 
 Le **tam-tam** était le système de communication longue distance en Afrique avant les réseaux. Aujourd'hui c'est ton SMS.
 
@@ -573,7 +573,7 @@ Le **tam-tam** était le système de communication longue distance en Afrique av
 ### Envoi simple
 
 ```php
-use Briko\tamtam\SMS;
+use Briko\Sms\SMS;
 
 // Un destinataire
 SMS::to('+2250700000000')->send('Votre commande #1042 est confirmée.');
@@ -687,7 +687,7 @@ En production, utilise `LOG_LEVEL=WARNING` pour ignorer DEBUG et INFO.
 ### Utilisation
 
 ```php
-use Briko\core\Logger;
+use Briko\Foundation\Logger;
 
 // Canal app (défaut)
 Logger::debug('Valeur inspectée', ['var' => $value]);
@@ -747,7 +747,7 @@ storage/logs/
 Log automatique de chaque requête. Détecte les requêtes lentes (seuil configurable).
 
 ```php
-use Briko\gbaka\Middleware\HttpLogger;
+use Briko\Http\Middleware\HttpLogger;
 
 // Sur une route
 $router->get('/users', [UserController::class, 'index'], [HttpLogger::class]);
@@ -761,7 +761,7 @@ Masque automatiquement les champs sensibles dans les payloads :
 
 ---
 
-## CLI — djassa
+## CLI — console
 
 ```bash
 # Serveur de développement
@@ -817,7 +817,7 @@ logger('Erreur critique', ['exception' => $e->getMessage()], 'error');
 
 // Chemin absolu depuis la racine du projet
 base_path('storage/logs');
-base_path('village/config.php');
+base_path('app/config.php');
 ```
 
 ---
@@ -830,7 +830,7 @@ base_path('village/config.php');
 php briko fabrique:controller PaiementController
 ```
 
-Génère `village/controllers/PaiementController.php` avec les 5 méthodes REST :
+Génère `app/controllers/PaiementController.php` avec les 5 méthodes REST :
 
 ```php
 index()    → GET    /ressource
@@ -846,7 +846,7 @@ destroy()  → DELETE /ressource/{id}
 php briko fabrique:model Produit
 ```
 
-Génère `village/models/Produit.php` avec les méthodes statiques :
+Génère `app/models/Produit.php` avec les méthodes statiques :
 
 ```php
 Produit::all();
@@ -889,26 +889,26 @@ DB_NAME=ma_base
 DB_USER=root
 DB_PASS=
 
-# Mail (voir section courrier ci-dessous)
+# Mail (voir section mail ci-dessous)
 MAIL_DRIVER=log
 
-# SMS (voir section tamtam ci-dessous)
+# SMS (voir section sms ci-dessous)
 SMS_DRIVER=log
 ```
 
 ---
 
-## Migrations — grenier
+## Migrations
 
 Le système de migrations gère l'évolution du schéma de ta base de données via des fichiers PHP versionnés.
 
 ### Structure d'un fichier de migration
 
-Les fichiers se placent dans `village/migrations/` avec le format `YYYY_MM_DD_HHMMSS_nom.php` :
+Les fichiers se placent dans `app/migrations/` avec le format `YYYY_MM_DD_HHMMSS_nom.php` :
 
 ```php
 <?php
-// village/migrations/2024_01_15_120000_create_users_table.php
+// app/migrations/2024_01_15_120000_create_users_table.php
 
 return [
     'up' => function (PDO $pdo): void {
@@ -957,9 +957,9 @@ php briko migrate:fresh
 
 ---
 
-## Mailing — courrier
+## Mailing
 
-Le module `courrier/` gère l'envoi d'emails avec 4 drivers interchangeables. Aucune dépendance externe — SMTP natif via sockets PHP.
+Le module `mail/` gère l'envoi d'emails avec 4 drivers interchangeables. Aucune dépendance externe — SMTP natif via sockets PHP.
 
 ### Configuration .env
 
@@ -1001,7 +1001,7 @@ MAILGUN_REGION=us
 ### Envoi simple — Mail facade
 
 ```php
-use Briko\courrier\Mail;
+use Briko\Mail\Mail;
 
 // HTML brut
 Mail::to('aya@abidjan.ci')
@@ -1037,7 +1037,7 @@ mail_to('user@ci.ci')
 
 ### Templates PHP — view()
 
-Les templates se placent dans `village/mails/`. La méthode `view()` charge le template et injecte les variables.
+Les templates se placent dans `app/mails/`. La méthode `view()` charge le template et injecte les variables.
 
 ```php
 Mail::to($user['email'])
@@ -1046,7 +1046,7 @@ Mail::to($user['email'])
     ->send();
 ```
 
-`village/mails/welcome.php` reçoit la variable `$user` :
+`app/mails/welcome.php` reçoit la variable `$user` :
 
 ```html
 <!DOCTYPE html>
@@ -1066,15 +1066,15 @@ Pour les emails complexes ou réutilisables, crée une classe `Mailable` :
 php briko fabrique:mail Welcome
 ```
 
-Génère `village/mailables/WelcomeMail.php` :
+Génère `app/mailables/WelcomeMail.php` :
 
 ```php
 <?php
-namespace Briko\village\mailables;
+namespace App\mailables;
 
-use Briko\courrier\Mail;
-use Briko\courrier\Mailable;
-use Briko\courrier\MailMessage;
+use Briko\Mail\Mail;
+use Briko\Mail\Mailable;
+use Briko\Mail\MailMessage;
 
 class WelcomeMail extends Mailable
 {
@@ -1092,8 +1092,8 @@ class WelcomeMail extends Mailable
 Envoi :
 
 ```php
-use Briko\courrier\Mail;
-use Briko\village\mailables\WelcomeMail;
+use Briko\Mail\Mail;
+use App\mailables\WelcomeMail;
 
 Mail::send(new WelcomeMail($user));
 ```
@@ -1163,7 +1163,7 @@ php briko fabrique:mail CommandeConfirmee
 php briko fabrique:mail NomDuMail
 ```
 
-Génère `village/mailables/NomDuMailMail.php` + `village/mails/nomdumail.php`.
+Génère `app/mailables/NomDuMailMail.php` + `app/mails/nomdumail.php`.
 
 ---
 

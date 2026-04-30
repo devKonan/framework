@@ -16,10 +16,17 @@
   },
   "autoload": {
     "psr-4": {
-      "Briko\\": "./"
+      "Briko\\Http\\":        "http/",
+      "Briko\\Routing\\":     "routing/",
+      "Briko\\Database\\":    "database/",
+      "Briko\\Sms\\":         "sms/",
+      "Briko\\Mail\\":        "mail/",
+      "Briko\\Console\\":     "console/",
+      "Briko\\Foundation\\":  "foundation/",
+      "App\\":                "app/"
     },
     "files": [
-      "core/helpers.php"
+      "foundation/helpers.php"
     ]
   },
   "minimum-stability": "stable"

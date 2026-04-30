@@ -1,0 +1,48 @@
+<?php
+
+use Briko\Foundation\Env;
+use Briko\Foundation\Logger;
+use Briko\Database\DB;
+
+if (!function_exists('env')) {
+    function env(string $key, mixed $default = null): mixed
+    {
+        return Env::get($key, $default);
+    }
+}
+
+if (!function_exists('db')) {
+    function db(string $table): \Briko\Database\QueryBuilder
+    {
+        return DB::table($table);
+    }
+}
+
+if (!function_exists('sms')) {
+    function sms(string|array $to): \Briko\Sms\SmsMessage
+    {
+        return \Briko\Sms\SMS::to($to);
+    }
+}
+
+if (!function_exists('mail_to')) {
+    function mail_to(string|array $address): \Briko\Mail\MailMessage
+    {
+        return \Briko\Mail\Mail::to($address);
+    }
+}
+
+if (!function_exists('logger')) {
+    function logger(string $message, array $context = [], string $level = 'info'): void
+    {
+        Logger::{$level}($message, $context);
+    }
+}
+
+if (!function_exists('base_path')) {
+    function base_path(string $path = ''): string
+    {
+        $base = dirname(__DIR__);
+        return $path ? $base . DIRECTORY_SEPARATOR . ltrim($path, '/\\') : $base;
+    }
+}
