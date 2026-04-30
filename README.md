@@ -859,6 +859,314 @@ Produit::delete(1);
 
 ---
 
+## Configuration — .env
+
+Toutes les variables de configuration se trouvent dans le fichier `.env` à la racine du projet.
+
+### Initialisation rapide
+
+```bash
+php briko env:setup
+```
+
+Copie `.env.example` vers `.env`. À faire **une seule fois** lors de l'installation.
+
+### Variables essentielles
+
+```env
+APP_NAME=MonApp
+APP_ENV=local           # local | production
+APP_DEBUG=true
+APP_URL=http://localhost:8000
+
+LOG_LEVEL=DEBUG         # DEBUG | INFO | WARNING | ERROR | CRITICAL
+
+# Base de données
+DB_DRIVER=mysql         # mysql | pgsql | sqlite
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_NAME=ma_base
+DB_USER=root
+DB_PASS=
+
+# Mail (voir section courrier ci-dessous)
+MAIL_DRIVER=log
+
+# SMS (voir section tamtam ci-dessous)
+SMS_DRIVER=log
+```
+
+---
+
+## Migrations — grenier
+
+Le système de migrations gère l'évolution du schéma de ta base de données via des fichiers PHP versionnés.
+
+### Structure d'un fichier de migration
+
+Les fichiers se placent dans `village/migrations/` avec le format `YYYY_MM_DD_HHMMSS_nom.php` :
+
+```php
+<?php
+// village/migrations/2024_01_15_120000_create_users_table.php
+
+return [
+    'up' => function (PDO $pdo): void {
+        $pdo->exec("
+            CREATE TABLE users (
+                id       INT AUTO_INCREMENT PRIMARY KEY,
+                nom      VARCHAR(100) NOT NULL,
+                email    VARCHAR(150) NOT NULL UNIQUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ");
+    },
+    'down' => function (PDO $pdo): void {
+        $pdo->exec("DROP TABLE IF EXISTS users");
+    },
+];
+```
+
+### Commandes CLI
+
+```bash
+# Exécuter toutes les migrations en attente
+php briko migrate
+
+# Voir l'état de chaque migration (pending / done)
+php briko migrate:status
+
+# Annuler le dernier batch
+php briko migrate:rollback
+
+# Supprimer toutes les tables et tout rejouer depuis zéro
+php briko migrate:fresh
+```
+
+### Exemple : sortie de migrate:status
+
+```
+  ┌─────────────────────────────────────────────────┬────────┬───────┐
+  │ Migration                                       │ Status │ Batch │
+  ├─────────────────────────────────────────────────┼────────┼───────┤
+  │ 2024_01_15_120000_create_users_table            │ done   │     1 │
+  │ 2024_02_01_090000_add_phone_to_users            │ done   │     2 │
+  │ 2024_03_10_140000_create_orders_table           │pending │       │
+  └─────────────────────────────────────────────────┴────────┴───────┘
+```
+
+---
+
+## Mailing — courrier
+
+Le module `courrier/` gère l'envoi d'emails avec 4 drivers interchangeables. Aucune dépendance externe — SMTP natif via sockets PHP.
+
+### Configuration .env
+
+```env
+MAIL_DRIVER=log
+# Drivers : log | smtp | sendgrid | mailgun
+
+MAIL_FROM_ADDRESS=noreply@monapp.ci
+MAIL_FROM_NAME="Mon Application"
+MAIL_REPLY_TO=
+
+# SMTP (Gmail, OVH, Amazon SES, Orange CI...)
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=ton@gmail.com
+MAIL_PASSWORD=ton_mot_de_passe_app
+MAIL_ENCRYPTION=tls
+# tls (port 587) | ssl (port 465) | none (port 25)
+
+# SendGrid
+SENDGRID_API_KEY=SG.xxxxx
+
+# Mailgun
+MAILGUN_API_KEY=key-xxxxx
+MAILGUN_DOMAIN=mg.monapp.ci
+MAILGUN_REGION=us
+# us | eu
+```
+
+### Drivers disponibles
+
+| Driver      | Quand l'utiliser                                        |
+|-------------|--------------------------------------------------------|
+| `log`       | Développement — emails écrits dans les logs, rien envoyé |
+| `smtp`      | Serveur SMTP : Gmail, OVH, Outlook, Amazon SES SMTP    |
+| `sendgrid`  | API SendGrid (volume + deliverability)                 |
+| `mailgun`   | API Mailgun (transactions, région US/EU)               |
+
+### Envoi simple — Mail facade
+
+```php
+use Briko\courrier\Mail;
+
+// HTML brut
+Mail::to('aya@abidjan.ci')
+    ->subject('Confirmation commande')
+    ->html('<h1>Merci pour ta commande !</h1>')
+    ->send();
+
+// Avec CC / BCC / ReplyTo
+Mail::to('client@ci.ci')
+    ->cc('copie@ci.ci')
+    ->bcc('archive@ci.ci')
+    ->replyTo('support@ci.ci')
+    ->subject('Votre facture')
+    ->html($html)
+    ->text($texte)
+    ->send();
+
+// Multi-destinataires
+Mail::to(['a@ci.ci', 'b@ci.ci'])
+    ->subject('Newsletter')
+    ->html($html)
+    ->send();
+```
+
+### Helper global
+
+```php
+mail_to('user@ci.ci')
+    ->subject('Bienvenue')
+    ->html('<p>Bonjour !</p>')
+    ->send();
+```
+
+### Templates PHP — view()
+
+Les templates se placent dans `village/mails/`. La méthode `view()` charge le template et injecte les variables.
+
+```php
+Mail::to($user['email'])
+    ->subject('Bienvenue !')
+    ->view('welcome', ['user' => $user])
+    ->send();
+```
+
+`village/mails/welcome.php` reçoit la variable `$user` :
+
+```html
+<!DOCTYPE html>
+<html>
+<body>
+  <h1>Bienvenue, <?= htmlspecialchars($user['nom']) ?> !</h1>
+  <p>Ton compte a été créé avec succès.</p>
+</body>
+</html>
+```
+
+### Mailable — emails structurés
+
+Pour les emails complexes ou réutilisables, crée une classe `Mailable` :
+
+```bash
+php briko fabrique:mail Welcome
+```
+
+Génère `village/mailables/WelcomeMail.php` :
+
+```php
+<?php
+namespace Briko\village\mailables;
+
+use Briko\courrier\Mail;
+use Briko\courrier\Mailable;
+use Briko\courrier\MailMessage;
+
+class WelcomeMail extends Mailable
+{
+    public function __construct(private array $user) {}
+
+    public function build(): MailMessage
+    {
+        return Mail::to($this->user['email'])
+            ->subject('Bienvenue sur ' . env('APP_NAME'))
+            ->view('welcome', ['user' => $this->user]);
+    }
+}
+```
+
+Envoi :
+
+```php
+use Briko\courrier\Mail;
+use Briko\village\mailables\WelcomeMail;
+
+Mail::send(new WelcomeMail($user));
+```
+
+### Pièces jointes
+
+```php
+Mail::to('client@ci.ci')
+    ->subject('Votre facture')
+    ->html($html)
+    ->attach(base_path('storage/factures/facture-1042.pdf'))
+    ->attach(base_path('storage/cgv.pdf'), 'Conditions générales', 'application/pdf')
+    ->send();
+```
+
+### Résultat d'envoi — MailResult
+
+```php
+$result = Mail::to('user@ci.ci')
+    ->subject('Test')
+    ->html('<p>Ok</p>')
+    ->send();
+
+if ($result->success) {
+    echo 'Envoyé — ID : ' . $result->messageId;
+} else {
+    echo 'Échec : ' . $result->error;
+}
+```
+
+### Commandes CLI mail
+
+```bash
+# Envoyer un email de test (vérifie la config)
+php briko mail:test ton@email.ci
+
+# Afficher le driver actif et sa configuration
+php briko mail:driver
+
+# Générer un Mailable + template
+php briko fabrique:mail CommandeConfirmee
+```
+
+### Exemple de sortie mail:driver
+
+```
+  ╔══════════════════════════════════════╗
+  ║     Driver Mail actif : smtp         ║
+  ╚══════════════════════════════════════╝
+
+  De       : noreply@monapp.ci (Mon Application)
+  Config   :
+    Host       : smtp.gmail.com
+    Port       : 587
+    Encryption : tls
+    Username   : ✅ défini
+    Password   : ✅ défini
+```
+
+---
+
+## Générateurs de code
+
+### Mailable
+
+```bash
+php briko fabrique:mail NomDuMail
+```
+
+Génère `village/mailables/NomDuMailMail.php` + `village/mails/nomdumail.php`.
+
+---
+
 ## Licence
 
 MIT — Fait avec 🔥 en Côte d'Ivoire.

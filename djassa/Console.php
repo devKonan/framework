@@ -69,6 +69,9 @@ class Console
             case 'fabrique:mail':
                 $this->makeMail($argv[2] ?? 'Welcome');
                 break;
+            case 'env:setup':
+                $this->envSetup();
+                break;
             case 'help':
             default:
                 $this->help();
@@ -101,6 +104,7 @@ class Console
         echo "    php briko mail:test <email>            Envoyer un email de test\n";
         echo "    php briko mail:driver                  Voir le driver Mail actif\n";
         echo "    php briko fabrique:mail <Nom>          Créer un Mailable\n\n";
+        echo "    php briko env:setup                    Créer .env depuis .env.example\n\n";
         echo "    php briko help                         Afficher cette aide\n\n";
     }
 
@@ -844,5 +848,43 @@ class Console
         echo "✅ Mailable créé     : village/mailables/{$name}Mail.php\n";
         echo "\n  Utilisation :\n";
         echo "    Mail::send(new {$name}Mail(['email' => 'user@ci.ci']));\n\n";
+    }
+
+    private function envSetup(): void
+    {
+        $target  = base_path('.env');
+        $example = base_path('.env.example');
+
+        if (!file_exists($example)) {
+            echo "❌ .env.example introuvable — impossible de créer .env\n";
+            return;
+        }
+
+        if (file_exists($target)) {
+            echo "⚠️  .env existe déjà. Utilise --force pour écraser :\n";
+            echo "     php briko env:setup --force\n\n";
+
+            // Si --force passé globalement via argv
+            global $argv;
+            if (!in_array('--force', $argv ?? [], true)) {
+                return;
+            }
+            echo "  ⚡ --force détecté, remplacement en cours...\n";
+        }
+
+        if (!copy($example, $target)) {
+            echo "❌ Impossible de créer .env (permission refusée ?)\n";
+            return;
+        }
+
+        echo "✅ .env créé depuis .env.example\n\n";
+        echo "  Prochaines étapes :\n";
+        echo "    1. Ouvre .env et renseigne tes valeurs (DB, MAIL, SMS...)\n";
+        echo "    2. Lance le serveur : php briko feu\n\n";
+        echo "  Clés importantes :\n";
+        echo "    APP_URL          URL de ton application\n";
+        echo "    DB_HOST/DB_NAME  Connexion base de données\n";
+        echo "    MAIL_DRIVER      log | smtp | sendgrid | mailgun\n";
+        echo "    SMS_DRIVER       log | africastalking | twilio | http\n\n";
     }
 }
