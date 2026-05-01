@@ -634,6 +634,179 @@ $router->post('/orders', [OrderController::class, 'store'], [
 // Low Bandwidth pour les clients mobiles
 $router->get('/api/products', [ProductController::class, 'index'], [LowBandwidth::class]);</code></pre>
 
+  <h2>Routes pour les vues HTML</h2>
+  <p>Une route qui retourne une page HTML utilise <code>view()</code> dans le controller et appelle <code>Response::html()</code>. La route se définit exactement comme une route JSON — c'est le controller qui décide du format de réponse.</p>
+
+  <div class="code-label"><span>app/routes.php</span></div>
+  <pre><code class="language-php">&lt;?php
+use App\Controllers\PageController;
+use App\Controllers\UserController;
+use App\Middleware\BearerAuth;
+
+// ── Routes HTML (pages) ──────────────────────────────────
+$router->get('/',             [PageController::class, 'accueil']);
+$router->get('/connexion',    [PageController::class, 'connexion']);
+$router->get('/dashboard',    [PageController::class, 'dashboard'],  [BearerAuth::class]);
+$router->get('/produits',     [PageController::class, 'produits']);
+$router->get('/produits/{id}',[PageController::class, 'produitDetail']);
+
+// ── Routes API JSON ──────────────────────────────────────
+$router->post('/api/login',          [UserController::class, 'login']);
+$router->get('/api/users',           [UserController::class, 'index'],  [BearerAuth::class]);
+$router->post('/api/users',          [UserController::class, 'store'],  [BearerAuth::class]);
+$router->put('/api/users/{id}',      [UserController::class, 'update'], [BearerAuth::class]);</code></pre>
+
+  <div class="callout callout-info">
+    <strong>Convention :</strong> les routes qui commencent par <code>/api/</code> retournent du JSON. Les autres retournent des vues HTML. Ce n'est pas une règle technique du framework — juste une bonne pratique.
+  </div>
+
+  <div class="code-label"><span>app/controllers/PageController.php</span></div>
+  <pre><code class="language-php">&lt;?php
+namespace App\Controllers;
+
+use Briko\Http\Request;
+use Briko\Http\Response;
+
+class PageController
+{
+    // GET /  →  app/views/accueil.php
+    public function accueil(Request $request): void
+    {
+        Response::html(view('accueil', [
+            'titre' => 'Accueil',
+        ]));
+    }
+
+    // GET /connexion  →  app/views/auth/connexion.php
+    public function connexion(Request $request): void
+    {
+        Response::html(view('auth.connexion', [
+            'titre' => 'Connexion',
+        ]));
+    }
+
+    // GET /dashboard  →  app/views/dashboard.php  (route protégée)
+    public function dashboard(Request $request): void
+    {
+        $user = $_REQUEST['_auth_user'];
+
+        $taches = db('tasks')
+            ->where('user_id', $user['id'])
+            ->orderBy('created_at', 'DESC')
+            ->limit(10)
+            ->get();
+
+        Response::html(view('dashboard', [
+            'titre'  => 'Mon tableau de bord',
+            'user'   => $user,
+            'taches' => $taches,
+        ]));
+    }
+
+    // GET /produits  →  app/views/produits/liste.php
+    public function produits(Request $request): void
+    {
+        $produits = db('produits')->where('actif', 1)->orderBy('nom')->get();
+
+        Response::html(view('produits.liste', [
+            'titre'    => 'Nos produits',
+            'produits' => $produits,
+        ]));
+    }
+
+    // GET /produits/{id}  →  app/views/produits/detail.php
+    public function produitDetail(Request $request): void
+    {
+        $produit = db('produits')->find($request->param('id'));
+
+        if (!$produit) {
+            Response::html(view('erreurs.404', ['titre' => 'Introuvable']), 404);
+            return;
+        }
+
+        Response::html(view('produits.detail', [
+            'titre'   => $produit['nom'],
+            'produit' => $produit,
+        ]));
+    }
+}</code></pre>
+
+  <p>Les templates PHP correspondants dans <code>app/views/</code> :</p>
+
+  <div class="code-label"><span>app/views/produits/liste.php</span></div>
+  <pre><code class="language-php">&lt;!DOCTYPE html&gt;
+&lt;html lang="fr"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;&lt;?= htmlspecialchars($titre) ?&gt; — &lt;?= env('APP_NAME') ?&gt;&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;&lt;?= htmlspecialchars($titre) ?&gt;&lt;/h1&gt;
+
+  &lt;?php if (empty($produits)): ?&gt;
+    &lt;p&gt;Aucun produit disponible.&lt;/p&gt;
+  &lt;?php else: ?&gt;
+    &lt;ul&gt;
+    &lt;?php foreach ($produits as $p): ?&gt;
+      &lt;li&gt;
+        &lt;a href="/produits/&lt;?= $p['id'] ?&gt;"&gt;
+          &lt;?= htmlspecialchars($p['nom']) ?&gt;
+        &lt;/a&gt;
+        — &lt;?= number_format($p['prix']) ?&gt; FCFA
+      &lt;/li&gt;
+    &lt;?php endforeach; ?&gt;
+    &lt;/ul&gt;
+  &lt;?php endif; ?&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+  <div class="code-label"><span>app/views/dashboard.php</span></div>
+  <pre><code class="language-php">&lt;!DOCTYPE html&gt;
+&lt;html lang="fr"&gt;
+&lt;head&gt;&lt;meta charset="UTF-8"&gt;&lt;title&gt;&lt;?= htmlspecialchars($titre) ?&gt;&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;Bonjour, &lt;?= htmlspecialchars($user['nom']) ?&gt; !&lt;/h1&gt;
+
+  &lt;h2&gt;Mes tâches récentes&lt;/h2&gt;
+  &lt;?php foreach ($taches as $t): ?&gt;
+    &lt;div&gt;
+      &lt;strong&gt;&lt;?= htmlspecialchars($t['titre']) ?&gt;&lt;/strong&gt;
+      &lt;span&gt;&lt;?= $t['statut'] ?&gt;&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;?php endforeach; ?&gt;
+
+  &lt;!-- Formulaire qui poste vers l'API JSON --&gt;
+  &lt;form id="form-tache"&gt;
+    &lt;input type="text" name="titre" placeholder="Nouvelle tâche"&gt;
+    &lt;button type="submit"&gt;Ajouter&lt;/button&gt;
+  &lt;/form&gt;
+
+  &lt;script&gt;
+    // La vue HTML appelle l'API JSON en fetch
+    document.getElementById('form-tache').addEventListener('submit', async e => {
+      e.preventDefault();
+      const titre = e.target.titre.value;
+      const token = localStorage.getItem('token');
+
+      await fetch('/api/tasks', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ titre }),
+      });
+
+      location.reload();
+    });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+  <div class="callout callout-tip">
+    <strong>Pattern hybride :</strong> les vues HTML chargent les données initiales côté serveur via <code>view()</code>, puis utilisent <code>fetch()</code> pour appeler les routes API JSON. C'est le pattern le plus courant avec Brikocode.
+  </div>
+
   <div class="page-nav">
     <a href="#" onclick="nav('configuration');return false">
       <span class="pn-label">← Précédent</span>
@@ -1900,8 +2073,177 @@ curl -X PUT http://localhost:8000/api/tasks/1 \
     </div>
   </div>
 
+  <h2>7. Ajouter une interface HTML</h2>
+  <div class="tuto-step">
+    <div class="tuto-step-header"><div class="tuto-num">7</div><div class="tuto-step-title">Routes HTML + vues pour l'interface utilisateur</div></div>
+    <div class="tuto-step-body">
+      <p>L'API JSON reste intacte. On ajoute des routes HTML qui affichent des pages utilisant cette API via <code>fetch()</code>.</p>
+      <div class="code-label"><span>app/routes.php — ajout des routes HTML</span></div>
+      <pre><code class="language-php">use App\Controllers\PageController;
+
+// Routes HTML (nouvelles)
+$router->get('/',         [PageController::class, 'accueil']);
+$router->get('/app',      [PageController::class, 'appShell'], [BearerAuth::class]);
+
+// Routes API (existantes, inchangées)
+$router->post('/api/register',    [AuthController::class, 'register']);
+// ...</code></pre>
+
+      <div class="code-label"><span>app/controllers/PageController.php</span></div>
+      <pre><code class="language-php">&lt;?php
+namespace App\Controllers;
+
+use Briko\Http\Request;
+use Briko\Http\Response;
+
+class PageController
+{
+    // Page d'accueil avec formulaire de connexion
+    public function accueil(Request $request): void
+    {
+        Response::html(view('accueil', [
+            'titre' => 'TaskAPI — Gérez vos tâches',
+        ]));
+    }
+
+    // Shell de l'application (chargé une fois après login)
+    public function appShell(Request $request): void
+    {
+        $user = $_REQUEST['_auth_user'];
+        Response::html(view('app', [
+            'titre' => 'Mes tâches',
+            'user'  => $user,
+        ]));
+    }
+}</code></pre>
+
+      <div class="code-label"><span>app/views/accueil.php</span></div>
+      <pre><code class="language-php">&lt;!DOCTYPE html&gt;
+&lt;html lang="fr"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;&lt;?= htmlspecialchars($titre) ?&gt;&lt;/title&gt;
+  &lt;style&gt;
+    body { font-family: sans-serif; max-width: 400px; margin: 60px auto; padding: 0 1rem; }
+    input, button { width: 100%; padding: .6rem; margin: .4rem 0; }
+    button { background: #ff6600; color: #fff; border: none; cursor: pointer; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;&lt;?= htmlspecialchars($titre) ?&gt;&lt;/h1&gt;
+
+  &lt;form id="form-register"&gt;
+    &lt;h2&gt;Créer un compte&lt;/h2&gt;
+    &lt;input type="text"  name="nom"   placeholder="Ton nom"&gt;
+    &lt;input type="email" name="email" placeholder="Email"&gt;
+    &lt;button type="submit"&gt;S'inscrire&lt;/button&gt;
+    &lt;p id="msg-register"&gt;&lt;/p&gt;
+  &lt;/form&gt;
+
+  &lt;script&gt;
+    document.getElementById('form-register').addEventListener('submit', async e => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target));
+      const res  = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (json.token) {
+        localStorage.setItem('token', json.token);
+        location.href = '/app';   // redirige vers la vue app
+      } else {
+        document.getElementById('msg-register').textContent = json.error;
+      }
+    });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+      <div class="code-label"><span>app/views/app.php</span></div>
+      <pre><code class="language-php">&lt;!DOCTYPE html&gt;
+&lt;html lang="fr"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;&lt;?= htmlspecialchars($titre) ?&gt;&lt;/title&gt;
+  &lt;style&gt;
+    body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 0 1rem; }
+    .task { padding: .5rem; border-bottom: 1px solid #eee; display: flex; gap: .5rem; }
+    .task.fait { opacity: .5; text-decoration: line-through; }
+    input[type=text] { flex: 1; padding: .5rem; }
+    button { padding: .5rem 1rem; background: #ff6600; color: #fff; border: none; cursor: pointer; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;Bonjour, &lt;?= htmlspecialchars($user['nom']) ?&gt; ! 👋&lt;/h1&gt;
+
+  &lt;form id="form-add"&gt;
+    &lt;input type="text" id="titre" placeholder="Nouvelle tâche..." required&gt;
+    &lt;button type="submit"&gt;Ajouter&lt;/button&gt;
+  &lt;/form&gt;
+
+  &lt;div id="tasks"&gt;Chargement...&lt;/div&gt;
+
+  &lt;script&gt;
+    const token = localStorage.getItem('token');
+    if (!token) location.href = '/';
+
+    // Charger les tâches via l'API
+    async function loadTasks() {
+      const res   = await fetch('/api/tasks', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const json  = await res.json();
+      const tasks = json.data ?? json;
+      document.getElementById('tasks').innerHTML = tasks.map(t => `
+        &lt;div class="task ${t.statut === 'fait' ? 'fait' : ''}"&gt;
+          &lt;span&gt;${t.titre}&lt;/span&gt;
+          &lt;button onclick="updateTask(${t.id}, 'fait')"&gt;✓&lt;/button&gt;
+          &lt;button onclick="deleteTask(${t.id})"&gt;✕&lt;/button&gt;
+        &lt;/div&gt;
+      `).join('');
+    }
+
+    // Ajouter une tâche
+    document.getElementById('form-add').addEventListener('submit', async e => {
+      e.preventDefault();
+      const titre = document.getElementById('titre').value;
+      await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ titre }),
+      });
+      document.getElementById('titre').value = '';
+      loadTasks();
+    });
+
+    async function updateTask(id, statut) {
+      await fetch('/api/tasks/' + id, {
+        method: 'PUT',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ statut }),
+      });
+      loadTasks();
+    }
+
+    async function deleteTask(id) {
+      await fetch('/api/tasks/' + id, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token },
+      });
+      loadTasks();
+    }
+
+    loadTasks();
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+    </div>
+  </div>
+
   <div class="callout callout-tip">
-    <strong>🎉 API complète !</strong> Tu as une API REST fonctionnelle avec auth, CRUD, pagination, OTP SMS et notifications mail — en moins de 100 lignes de code applicatif.
+    <strong>🎉 Application complète !</strong> Routes HTML pour les pages + routes API JSON pour les données. Les vues HTML utilisent <code>view()</code> côté serveur et <code>fetch()</code> pour appeler l'API. Aucune dépendance JS externe.
   </div>
 
   <div class="page-nav">
@@ -2227,8 +2569,217 @@ curl -X POST http://localhost:8000/commandes \
     </div>
   </div>
 
+  <h2>7. Pages HTML avec vues</h2>
+  <div class="tuto-step">
+    <div class="tuto-step-header"><div class="tuto-num">7</div><div class="tuto-step-title">Interface web : catalogue, panier, inscription OTP</div></div>
+    <div class="tuto-step-body">
+      <p>On ajoute des routes HTML pour les pages publiques de la boutique. Les données sont chargées côté serveur et le paiement/commande appelle l'API JSON.</p>
+
+      <div class="code-label"><span>app/routes.php — routes HTML ajoutées</span></div>
+      <pre><code class="language-php">use App\Controllers\PageController;
+
+// Pages HTML publiques
+$router->get('/',                  [PageController::class, 'accueil']);
+$router->get('/boutique',          [PageController::class, 'catalogue']);
+$router->get('/boutique/{id}',     [PageController::class, 'produit']);
+$router->get('/inscription',       [PageController::class, 'inscription']);
+$router->get('/mon-compte',        [PageController::class, 'monCompte'],  [BearerAuth::class]);
+
+// API JSON (existantes)
+$router->post('/auth/register',    [AuthController::class, 'register']);
+$router->post('/auth/verify',      [AuthController::class, 'verify']);
+$router->get('/produits',          [ProduitController::class, 'index'],    [OfflineFirst::class]);
+$router->post('/commandes',        [CommandeController::class, 'store'],   [BearerAuth::class]);</code></pre>
+
+      <div class="code-label"><span>app/controllers/PageController.php</span></div>
+      <pre><code class="language-php">&lt;?php
+namespace App\Controllers;
+
+use Briko\Http\Request;
+use Briko\Http\Response;
+
+class PageController
+{
+    public function accueil(Request $request): void
+    {
+        // Données chargées côté serveur, passées à la vue
+        $produits = db('produits')->where('actif', 1)->limit(6)->get();
+
+        Response::html(view('accueil', [
+            'titre'    => 'Boutique',
+            'produits' => $produits,
+        ]));
+    }
+
+    public function catalogue(Request $request): void
+    {
+        $produits = db('produits')
+            ->where('actif', 1)
+            ->orderBy('nom')
+            ->paginate(12);
+
+        Response::html(view('boutique.catalogue', [
+            'titre'    => 'Tous nos produits',
+            'produits' => $produits['data'],
+            'pages'    => $produits,
+        ]));
+    }
+
+    public function produit(Request $request): void
+    {
+        $produit = db('produits')->find($request->param('id'));
+        if (!$produit) {
+            Response::html(view('erreurs.404', ['titre' => 'Produit introuvable']), 404);
+            return;
+        }
+
+        Response::html(view('boutique.produit', [
+            'titre'   => $produit['nom'],
+            'produit' => $produit,
+        ]));
+    }
+
+    public function inscription(Request $request): void
+    {
+        Response::html(view('auth.inscription', [
+            'titre' => 'Créer mon compte',
+        ]));
+    }
+
+    public function monCompte(Request $request): void
+    {
+        $user       = $_REQUEST['_auth_user'];
+        $commandes  = db('commandes')
+            ->where('user_id', $user['id'])
+            ->orderBy('created_at', 'DESC')
+            ->get();
+
+        Response::html(view('compte.index', [
+            'titre'     => 'Mon compte',
+            'user'      => $user,
+            'commandes' => $commandes,
+        ]));
+    }
+}</code></pre>
+
+      <div class="code-label"><span>app/views/auth/inscription.php — formulaire OTP en 2 étapes</span></div>
+      <pre><code class="language-php">&lt;!DOCTYPE html&gt;
+&lt;html lang="fr"&gt;
+&lt;head&gt;&lt;meta charset="UTF-8"&gt;&lt;title&gt;&lt;?= htmlspecialchars($titre) ?&gt;&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;&lt;?= htmlspecialchars($titre) ?&gt;&lt;/h1&gt;
+
+  &lt;!-- Étape 1 : saisie du numéro --&gt;
+  &lt;form id="step1"&gt;
+    &lt;input type="text"  name="nom"       placeholder="Ton nom" required&gt;
+    &lt;input type="tel"   name="telephone" placeholder="+225070000000" required&gt;
+    &lt;input type="email" name="email"     placeholder="Email (optionnel)"&gt;
+    &lt;button type="submit"&gt;Recevoir mon code SMS&lt;/button&gt;
+    &lt;p id="err1" style="color:red"&gt;&lt;/p&gt;
+  &lt;/form&gt;
+
+  &lt;!-- Étape 2 : vérification OTP (cachée au départ) --&gt;
+  &lt;form id="step2" style="display:none"&gt;
+    &lt;p&gt;Code envoyé au &lt;span id="tel-display"&gt;&lt;/span&gt;&lt;/p&gt;
+    &lt;input type="text" name="code" placeholder="Code à 6 chiffres" maxlength="6" required&gt;
+    &lt;button type="submit"&gt;Vérifier&lt;/button&gt;
+    &lt;p id="err2" style="color:red"&gt;&lt;/p&gt;
+  &lt;/form&gt;
+
+  &lt;script&gt;
+    let phoneNum = '';
+
+    // Étape 1 : envoyer l'OTP via l'API
+    document.getElementById('step1').addEventListener('submit', async e => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target));
+      phoneNum   = data.telephone;
+
+      const res  = await fetch('/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+
+      if (res.ok) {
+        document.getElementById('step1').style.display = 'none';
+        document.getElementById('step2').style.display = 'block';
+        document.getElementById('tel-display').textContent = phoneNum;
+      } else {
+        document.getElementById('err1').textContent = json.error;
+      }
+    });
+
+    // Étape 2 : vérifier l'OTP
+    document.getElementById('step2').addEventListener('submit', async e => {
+      e.preventDefault();
+      const code = e.target.code.value;
+
+      const res  = await fetch('/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ telephone: phoneNum, code }),
+      });
+      const json = await res.json();
+
+      if (json.token) {
+        localStorage.setItem('token', json.token);
+        location.href = '/mon-compte';   // → vue HTML mon-compte
+      } else {
+        document.getElementById('err2').textContent = json.error;
+      }
+    });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+      <div class="code-label"><span>app/views/boutique/produit.php — page produit avec bouton commander</span></div>
+      <pre><code class="language-php">&lt;!DOCTYPE html&gt;
+&lt;html lang="fr"&gt;
+&lt;head&gt;&lt;meta charset="UTF-8"&gt;&lt;title&gt;&lt;?= htmlspecialchars($titre) ?&gt;&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;
+  &lt;a href="/boutique"&gt;← Retour&lt;/a&gt;
+
+  &lt;h1&gt;&lt;?= htmlspecialchars($produit['nom']) ?&gt;&lt;/h1&gt;
+  &lt;p&gt;Prix : &lt;strong&gt;&lt;?= number_format($produit['prix']) ?&gt; FCFA&lt;/strong&gt;&lt;/p&gt;
+  &lt;p&gt;Stock : &lt;?= $produit['stock'] ?&gt; disponible(s)&lt;/p&gt;
+
+  &lt;form id="form-commande"&gt;
+    &lt;input type="hidden" name="produit_id" value="&lt;?= $produit['id'] ?&gt;"&gt;
+    &lt;label&gt;Quantité :
+      &lt;input type="number" name="quantite" value="1" min="1" max="&lt;?= $produit['stock'] ?&gt;"&gt;
+    &lt;/label&gt;
+    &lt;button type="submit"&gt;Commander&lt;/button&gt;
+    &lt;p id="msg"&gt;&lt;/p&gt;
+  &lt;/form&gt;
+
+  &lt;script&gt;
+    document.getElementById('form-commande').addEventListener('submit', async e => {
+      e.preventDefault();
+      const token = localStorage.getItem('token');
+      if (!token) { location.href = '/inscription'; return; }
+
+      const data = Object.fromEntries(new FormData(e.target));
+      const res  = await fetch('/commandes', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ produit_id: +data.produit_id, quantite: +data.quantite }),
+      });
+      const json = await res.json();
+
+      document.getElementById('msg').textContent = res.ok
+        ? '✅ Commande #' + json.id + ' confirmée ! Total : ' + json.total + ' FCFA'
+        : '❌ ' + json.error;
+    });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+    </div>
+  </div>
+
   <div class="callout callout-tip">
-    <strong>🏆 Projet complet !</strong> Tu as une application avec inscription OTP SMS, catalogue produits offline-first, commandes avec SMS + email de confirmation — le tout avec Brikocode, zéro dépendance externe.
+    <strong>🏆 Projet complet !</strong> Pages HTML chargées côté serveur avec <code>view()</code> + API JSON pour les actions (commande, auth OTP). Architecture hybride propre — aucun framework JS requis.
   </div>
 
   <div class="page-nav">
