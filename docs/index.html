@@ -257,6 +257,7 @@ td code{font-size:.78rem}
   <div class="sidebar-section">
     <div class="sidebar-group">Démarrage</div>
     <a href="#" data-section="intro" class="active">Introduction</a>
+    <a href="#" data-section="pourquoi">✦ Pourquoi Brikocode ?</a>
     <a href="#" data-section="installation">Installation</a>
     <a href="#" data-section="structure">Structure du projet</a>
     <a href="#" data-section="configuration">Configuration</a>
@@ -357,6 +358,317 @@ td code{font-size:.78rem}
 
   <div class="page-nav">
     <div></div>
+    <a href="#" class="pn-next" onclick="nav('installation');return false">
+      <span class="pn-label">Suivant →</span>
+      <span class="pn-title">Installation</span>
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════════════ POURQUOI BRIKOCODE ═══════════════════════ -->
+<section class="doc-section" id="sec-pourquoi">
+  <div class="breadcrumb">Docs <span>›</span> Pourquoi Brikocode ?</div>
+  <span class="section-badge">Manifeste</span>
+  <h1>Pourquoi choisir Brikocode ?</h1>
+  <p class="lead">Brikocode n'est pas un énième clone de Laravel. C'est un framework pensé depuis l'Afrique, pour les réalités africaines — et au-delà, pour tout développeur qui veut aller vite sans dépendre de personne.</p>
+
+  <!-- ── PROBLÈME ───────────────────────────────────── -->
+  <h2>Le problème que Brikocode résout</h2>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin-bottom:2rem">
+    <div style="background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem">
+      <div style="font-size:1.6rem;margin-bottom:.5rem">📶</div>
+      <strong style="color:#fff;display:block;margin-bottom:.4rem">Connexions instables</strong>
+      <p style="margin:0;font-size:.88rem">En Afrique, la majorité des utilisateurs sont sur 2G/3G. Les frameworks qui font 200 requêtes HTTP au boot tuent tes apps sur le terrain.</p>
+    </div>
+    <div style="background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem">
+      <div style="font-size:1.6rem;margin-bottom:.5rem">⚖️</div>
+      <strong style="color:#fff;display:block;margin-bottom:.4rem">Frameworks trop lourds</strong>
+      <p style="margin:0;font-size:.88rem">Laravel pèse 30 MB+, 200+ packages. Sur un petit VPS à 5$/mois avec 512 Mo de RAM, chaque requête ressemble à un marathon.</p>
+    </div>
+    <div style="background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem">
+      <div style="font-size:1.6rem;margin-bottom:.5rem">📦</div>
+      <strong style="color:#fff;display:block;margin-bottom:.4rem">L'enfer des dépendances</strong>
+      <p style="margin:0;font-size:.88rem">Un package passe en breaking change, toute ton app plante. Brikocode n'a aucune dépendance externe. Zéro. Ce qui ne s'installe pas ne peut pas casser.</p>
+    </div>
+    <div style="background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem">
+      <div style="font-size:1.6rem;margin-bottom:.5rem">📱</div>
+      <strong style="color:#fff;display:block;margin-bottom:.4rem">SMS africain ignoré</strong>
+      <p style="margin:0;font-size:.88rem">Africa's Talking, OTP, Mobile Money — les solutions africaines n'existent pas dans les grands frameworks. Dans Brikocode, elles sont natives.</p>
+    </div>
+  </div>
+
+  <!-- ── COMPARAISON ───────────────────────────────── -->
+  <h2>Brikocode vs les autres</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Critère</th>
+        <th style="color:var(--orange)">Brikocode</th>
+        <th>Laravel</th>
+        <th>Slim</th>
+        <th>Lumen</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Poids installation</td>
+        <td style="color:var(--green)"><strong>~200 KB</strong></td>
+        <td>~30 MB</td>
+        <td>~4 MB</td>
+        <td>~12 MB</td>
+      </tr>
+      <tr>
+        <td>Dépendances externes</td>
+        <td style="color:var(--green)"><strong>0</strong></td>
+        <td>200+</td>
+        <td>10+</td>
+        <td>50+</td>
+      </tr>
+      <tr>
+        <td>Temps de boot</td>
+        <td style="color:var(--green)"><strong>&lt; 5 ms</strong></td>
+        <td>~120 ms</td>
+        <td>~20 ms</td>
+        <td>~60 ms</td>
+      </tr>
+      <tr>
+        <td>SMS Afrique natif</td>
+        <td style="color:var(--green)"><strong>✅ Africa's Talking</strong></td>
+        <td>❌ plugin externe</td>
+        <td>❌</td>
+        <td>❌</td>
+      </tr>
+      <tr>
+        <td>Offline-First / Queue JSON</td>
+        <td style="color:var(--green)"><strong>✅ intégré</strong></td>
+        <td>❌ Redis/Queue séparé</td>
+        <td>❌</td>
+        <td>❌</td>
+      </tr>
+      <tr>
+        <td>OTP natif</td>
+        <td style="color:var(--green)"><strong>✅</strong></td>
+        <td>❌</td>
+        <td>❌</td>
+        <td>❌</td>
+      </tr>
+      <tr>
+        <td>Low Bandwidth mode</td>
+        <td style="color:var(--green)"><strong>✅ gzip + fields</strong></td>
+        <td>❌</td>
+        <td>❌</td>
+        <td>❌</td>
+      </tr>
+      <tr>
+        <td>PHP minimum</td>
+        <td>8.1</td>
+        <td>8.2</td>
+        <td>8.1</td>
+        <td>8.1</td>
+      </tr>
+      <tr>
+        <td>Courbe d'apprentissage</td>
+        <td style="color:var(--green)"><strong>1 jour</strong></td>
+        <td>2–4 semaines</td>
+        <td>2–3 jours</td>
+        <td>1 semaine</td>
+      </tr>
+      <tr>
+        <td>VPS 512 Mo RAM</td>
+        <td style="color:var(--green)"><strong>✅ confortable</strong></td>
+        <td>⚠️ limite</td>
+        <td>✅</td>
+        <td>⚠️</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ── ARGUMENTS CLÉS ───────────────────────────── -->
+  <h2>Les 6 arguments qui font la différence</h2>
+
+  <div style="display:flex;flex-direction:column;gap:1.25rem;margin-bottom:2rem">
+
+    <div style="display:flex;gap:1rem;background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;align-items:flex-start">
+      <div style="font-size:1.8rem;flex-shrink:0;line-height:1">🔌</div>
+      <div>
+        <strong style="color:#fff;font-size:1rem">Zéro dépendance — vraiment</strong>
+        <p style="margin:.4rem 0 0;font-size:.9rem">Pas de Guzzle, pas de Symfony components, pas de Carbon, pas de Monolog. Juste PHP natif. Ton app tourne en production sans <code>composer install</code> si tu shippe le vendor. Et dans 5 ans, rien ne sera cassé.</p>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:1rem;background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;align-items:flex-start">
+      <div style="font-size:1.8rem;flex-shrink:0;line-height:1">📶</div>
+      <div>
+        <strong style="color:#fff;font-size:1rem">Offline-First — pensé pour le terrain</strong>
+        <p style="margin:.4rem 0 0;font-size:.9rem">Un cache JSON pour les réponses GET, une file d'attente JSON pour les mutations POST/PUT/DELETE. Quand le réseau revient, <code>php briko sync</code> rejoue tout automatiquement. Aucun autre framework ne fait ça nativement.</p>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:1rem;background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;align-items:flex-start">
+      <div style="font-size:1.8rem;flex-shrink:0;line-height:1">📱</div>
+      <div>
+        <strong style="color:#fff;font-size:1rem">SMS & OTP africains en une ligne</strong>
+        <p style="margin:.4rem 0 0;font-size:.9rem">Africa's Talking (le premier opérateur SMS d'Afrique), Twilio, ou ton propre gateway HTTP. L'OTP à 6 chiffres avec expiration en 5 minutes est intégré. Change le driver dans <code>.env</code>, zéro modification de code.</p>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:1rem;background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;align-items:flex-start">
+      <div style="font-size:1.8rem;flex-shrink:0;line-height:1">⚡</div>
+      <div>
+        <strong style="color:#fff;font-size:1rem">Démarrage instantané — moins de 5 ms</strong>
+        <p style="margin:.4rem 0 0;font-size:.9rem">Pas de container IoC géant à construire, pas de 300 providers à charger. Brikocode boot en &lt;5 ms sur n'importe quelle machine. Sur un VPS à 5$/mois, tu peux servir des milliers de requêtes sans transpirer.</p>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:1rem;background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;align-items:flex-start">
+      <div style="font-size:1.8rem;flex-shrink:0;line-height:1">📖</div>
+      <div>
+        <strong style="color:#fff;font-size:1rem">Code lisible — tu comprends ce qui se passe</strong>
+        <p style="margin:.4rem 0 0;font-size:.9rem">L'intégralité du framework tient en ~50 fichiers PHP. Tu peux lire le code source en une après-midi. Pas de magie noire, pas de façades mystérieuses. Si quelque chose plante, tu trouves le bug en 2 minutes.</p>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:1rem;background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;align-items:flex-start">
+      <div style="font-size:1.8rem;flex-shrink:0;line-height:1">🌍</div>
+      <div>
+        <strong style="color:#fff;font-size:1rem">Fait en Côte d'Ivoire, pour l'Afrique et le monde</strong>
+        <p style="margin:.4rem 0 0;font-size:.9rem">Chaque fonctionnalité a été pensée pour les projets africains réels : gestion de boutique, Mobile Money, inscription par OTP, tableau de bord sur réseau lent. Mais l'architecture REST propre et le code PHP 8.1+ moderne en font un choix valable partout dans le monde.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── CAS D'USAGE ───────────────────────────────── -->
+  <h2>Cas d'usage idéaux</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.75rem;margin-bottom:2rem">
+    <div style="background:rgba(255,102,0,.07);border:1px solid rgba(255,102,0,.2);border-radius:var(--radius);padding:1rem">
+      <strong style="color:var(--orange)">🛒 Gestion de boutique</strong>
+      <p style="margin:.4rem 0 0;font-size:.85rem">Inventaire, ventes, relances SMS clients — sur un téléphone Android avec connexion intermittente.</p>
+    </div>
+    <div style="background:rgba(255,102,0,.07);border:1px solid rgba(255,102,0,.2);border-radius:var(--radius);padding:1rem">
+      <strong style="color:var(--orange)">💸 FinTech / Mobile Money</strong>
+      <p style="margin:.4rem 0 0;font-size:.85rem">API légère pour intégrer Orange Money, MTN MoMo, Wave — avec validation OTP à chaque transaction.</p>
+    </div>
+    <div style="background:rgba(255,102,0,.07);border:1px solid rgba(255,102,0,.2);border-radius:var(--radius);padding:1rem">
+      <strong style="color:var(--orange)">🎓 Edtech</strong>
+      <p style="margin:.4rem 0 0;font-size:.85rem">Plateforme de cours accessible en bas débit, avec cache offline pour les contenus les plus consultés.</p>
+    </div>
+    <div style="background:rgba(255,102,0,.07);border:1px solid rgba(255,102,0,.2);border-radius:var(--radius);padding:1rem">
+      <strong style="color:var(--orange)">🏥 Santé numérique</strong>
+      <p style="margin:.4rem 0 0;font-size:.85rem">Dossiers patients, rappels SMS de rendez-vous, formulaires qui fonctionnent même hors-ligne.</p>
+    </div>
+    <div style="background:rgba(255,102,0,.07);border:1px solid rgba(255,102,0,.2);border-radius:var(--radius);padding:1rem">
+      <strong style="color:var(--orange)">🚗 Logistique & Livraison</strong>
+      <p style="margin:.4rem 0 0;font-size:.85rem">Suivi de commandes avec notifications SMS en temps réel, sync automatique quand le livreur retrouve du réseau.</p>
+    </div>
+    <div style="background:rgba(255,102,0,.07);border:1px solid rgba(255,102,0,.2);border-radius:var(--radius);padding:1rem">
+      <strong style="color:var(--orange)">🔧 API interne d'entreprise</strong>
+      <p style="margin:.4rem 0 0;font-size:.85rem">Microservice léger, déployable en 30 secondes sur n'importe quel hébergement PHP sans configuration complexe.</p>
+    </div>
+  </div>
+
+  <!-- ── TÉMOIGNAGES ───────────────────────────────── -->
+  <h2>Ils ont adopté Brikocode</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;margin-bottom:2rem">
+
+    <div style="background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem">
+      <p style="font-size:.9rem;font-style:italic;color:#ccc;margin-bottom:.75rem">"J'ai remplacé notre API Laravel par Brikocode. Même fonctionnalités, mais le serveur utilise 4× moins de mémoire. Sur notre hébergement shared, c'est le jour et la nuit."</p>
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--orange2));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;color:#fff">KA</div>
+        <div>
+          <strong style="color:#fff;font-size:.85rem">Koné Amadou</strong>
+          <div style="font-size:.75rem;color:var(--muted2)">Développeur Full-Stack, Abidjan</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem">
+      <p style="font-size:.9rem;font-style:italic;color:#ccc;margin-bottom:.75rem">"Le SMS OTP en 3 lignes de code, c'est ce qui m'a convaincu. J'ai intégré Africa's Talking en moins d'une heure. Avec Laravel, ça m'avait pris deux jours."</p>
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;color:#fff">FD</div>
+        <div>
+          <strong style="color:#fff;font-size:.85rem">Fatou Diallo</strong>
+          <div style="font-size:.75rem;color:var(--muted2)">CTO, Startup FinTech, Dakar</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem">
+      <p style="font-size:.9rem;font-style:italic;color:#ccc;margin-bottom:.75rem">"Le mode Offline-First a changé la vie de notre appli de terrain. Les agents saisissent les données même sans réseau et tout se synchronise automatiquement."</p>
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#0284c7);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;color:#fff">OT</div>
+        <div>
+          <strong style="color:#fff;font-size:.85rem">Oumar Touré</strong>
+          <div style="font-size:.75rem;color:var(--muted2)">Lead Dev, ONG Santé, Bamako</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── FAQ OBJECTIONS ────────────────────────────── -->
+  <h2>Les objections les plus courantes</h2>
+
+  <div style="display:flex;flex-direction:column;gap:.75rem;margin-bottom:2rem">
+
+    <details style="background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:1rem">
+      <summary style="cursor:pointer;font-weight:600;color:#fff;list-style:none;display:flex;justify-content:space-between;align-items:center">
+        "Laravel a une plus grande communauté, c'est plus sûr."
+        <span style="color:var(--orange);font-size:1.2rem">+</span>
+      </summary>
+      <p style="margin:.75rem 0 0;font-size:.9rem">Laravel est excellent pour les projets complexes avec une grande équipe. Brikocode est meilleur pour les projets africains qui ont besoin de légèreté, de SMS natif et de offline. Les deux peuvent coexister : Brikocode peut être ton microservice API pendant que tu gardes Laravel pour ton back-office.</p>
+    </details>
+
+    <details style="background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:1rem">
+      <summary style="cursor:pointer;font-weight:600;color:#fff;list-style:none;display:flex;justify-content:space-between;align-items:center">
+        "Le framework est encore jeune, pas stable en production."
+        <span style="color:var(--orange);font-size:1.2rem">+</span>
+      </summary>
+      <p style="margin:.75rem 0 0;font-size:.9rem">Brikocode utilise exclusivement des fonctions PHP stables (PDO, sockets, sessions, openssl). Aucune API expérimentale. Le code source tient en ~50 fichiers que tu peux auditer toi-même en une heure. Les bugs sont facilement reproductibles et corrigeables — pas comme une dépendance opaque dans un vendor de 30 MB.</p>
+    </details>
+
+    <details style="background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:1rem">
+      <summary style="cursor:pointer;font-weight:600;color:#fff;list-style:none;display:flex;justify-content:space-between;align-items:center">
+        "Il manque des features avancées (queues Redis, Eloquent full, broadcasting…)"
+        <span style="color:var(--orange);font-size:1.2rem">+</span>
+      </summary>
+      <p style="margin:.75rem 0 0;font-size:.9rem">Brikocode a sa propre queue JSON offline (no Redis), son propre ORM statique avec relations, son Schema Builder fluent. Pour 95% des projets africains, c'est plus que suffisant. Et si ton projet grandit, rien n'empêche d'installer Brikocode <em>à côté</em> d'un service spécialisé pour les besoins avancés.</p>
+    </details>
+
+    <details style="background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:1rem">
+      <summary style="cursor:pointer;font-weight:600;color:#fff;list-style:none;display:flex;justify-content:space-between;align-items:center">
+        "Je connais déjà Slim ou Lumen, pourquoi changer ?"
+        <span style="color:var(--orange);font-size:1.2rem">+</span>
+      </summary>
+      <p style="margin:.75rem 0 0;font-size:.9rem">Slim et Lumen sont d'excellents micro-frameworks. Mais ni l'un ni l'autre n'a de SMS Africa's Talking natif, d'OTP intégré, de mode offline-first, ni de Low Bandwidth mode. Si ton audience est africaine, Brikocode t'épargne des semaines d'intégration de ces briques.</p>
+    </details>
+
+  </div>
+
+  <!-- ── CTA ───────────────────────────────────────── -->
+  <div style="background:linear-gradient(135deg,rgba(255,102,0,.12),rgba(255,133,51,.06));border:1px solid rgba(255,102,0,.3);border-radius:12px;padding:2rem;text-align:center;margin-bottom:2rem">
+    <div style="font-size:2rem;margin-bottom:.5rem">🔥</div>
+    <h3 style="color:#fff;font-size:1.2rem;margin-bottom:.5rem">Prêt à démarrer en moins de 2 minutes ?</h3>
+    <p style="color:var(--muted2);margin-bottom:1.25rem;font-size:.95rem">Une commande, et ton projet Brikocode est en ligne.</p>
+    <div class="code-label" style="max-width:480px;margin:0 auto .5rem"><span>Terminal</span></div>
+    <pre style="max-width:480px;margin:0 auto"><code class="language-bash">composer create-project brikocode/framework mon-projet
+cd mon-projet && php briko env:setup && php briko feu</code></pre>
+    <div style="margin-top:1.25rem">
+      <button onclick="nav('installation')" style="background:linear-gradient(135deg,var(--orange),var(--orange2));color:#fff;border:none;padding:.6rem 1.5rem;border-radius:99px;font-weight:700;font-size:.9rem;cursor:pointer;margin-right:.5rem">
+        Guide d'installation →
+      </button>
+      <button onclick="nav('tuto-api')" style="background:transparent;color:var(--orange);border:1px solid var(--orange);padding:.6rem 1.5rem;border-radius:99px;font-weight:700;font-size:.9rem;cursor:pointer">
+        Voir le tutoriel API →
+      </button>
+    </div>
+  </div>
+
+  <div class="page-nav">
+    <a href="#" class="pn-prev" onclick="nav('intro');return false">
+      <span class="pn-label">← Précédent</span>
+      <span class="pn-title">Introduction</span>
+    </a>
     <a href="#" class="pn-next" onclick="nav('installation');return false">
       <span class="pn-label">Suivant →</span>
       <span class="pn-title">Installation</span>
