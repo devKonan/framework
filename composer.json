@@ -21,6 +21,7 @@
       "Briko\\Database\\":    "database/",
       "Briko\\Sms\\":         "sms/",
       "Briko\\Mail\\":        "mail/",
+      "Briko\\Payment\\":     "payment/",
       "Briko\\Console\\":     "console/",
       "Briko\\Foundation\\":  "foundation/",
       "App\\":                "app/",

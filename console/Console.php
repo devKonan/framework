@@ -87,6 +87,15 @@ class Console
                 }
                 $this->dbSeed($class);
                 break;
+            case 'payment:test':
+                $this->paymentTest($argv[2] ?? null, (int) ($argv[3] ?? 100));
+                break;
+            case 'payment:driver':
+                $this->paymentDriver();
+                break;
+            case 'payment:verify':
+                $this->paymentVerify($argv[2] ?? null);
+                break;
             case 'help':
             default:
                 $this->help();
@@ -123,6 +132,9 @@ class Console
         echo "    php briko fabrique:migration <nom>     Créer un fichier de migration\n";
         echo "    php briko fabrique:seeder <Nom>        Créer un Seeder\n";
         echo "    php briko db:seed [--class=<Nom>]      Exécuter les seeders\n\n";
+        echo "    php briko payment:test <téléphone> [montant]  Tester un paiement\n";
+        echo "    php briko payment:driver               Voir le driver Payment actif\n";
+        echo "    php briko payment:verify <txId>        Vérifier une transaction\n\n";
         echo "    php briko help                         Afficher cette aide\n\n";
     }
 
@@ -866,6 +878,126 @@ class Console
         echo "✅ Mailable créé     : app/mailables/{$name}Mail.php\n";
         echo "\n  Utilisation :\n";
         echo "    Mail::send(new {$name}Mail(['email' => 'user@ci.ci']));\n\n";
+    }
+
+    // ─── Payment ─────────────────────────────────────────────────────────────
+
+    private function paymentTest(?string $phone, int $amount): void
+    {
+        if (!$phone) {
+            echo "  Usage : php briko payment:test <+2250701234567> [montant]\n";
+            return;
+        }
+
+        new \Briko\Foundation\App();
+
+        $driver = env('PAYMENT_DRIVER', 'log');
+        echo "\n  💳 Test paiement {$amount} " . env('PAYMENT_CURRENCY', 'XOF') . " via {$driver}...\n";
+
+        $result = \Briko\Payment\Payment::amount($amount)
+            ->to($phone)
+            ->description('Test paiement Brikocode')
+            ->reference('TEST-' . time())
+            ->send();
+
+        if ($result->isOk() || $result->isPending()) {
+            echo "  ✅ Paiement initié — statut : {$result->status}\n";
+            echo "     ID transaction : {$result->transactionId}\n";
+            if ($result->paymentUrl) {
+                echo "     URL de paiement : {$result->paymentUrl}\n";
+            }
+            echo "     Message : {$result->message}\n";
+        } else {
+            echo "  ❌ Échec : {$result->message}\n";
+        }
+        echo "\n";
+    }
+
+    private function paymentDriver(): void
+    {
+        new \Briko\Foundation\App();
+
+        $driver   = env('PAYMENT_DRIVER', 'log');
+        $currency = env('PAYMENT_CURRENCY', 'XOF');
+
+        echo "\n  💳 Driver Payment actif : {$driver}\n";
+        echo "  Devise par défaut      : {$currency}\n\n";
+
+        $details = match ($driver) {
+            'orangemoney' => [
+                'Client ID'    => env('ORANGE_MONEY_CLIENT_ID')     ? '✅ défini' : '❌ manquant (ORANGE_MONEY_CLIENT_ID)',
+                'Client Secret'=> env('ORANGE_MONEY_CLIENT_SECRET') ? '✅ défini' : '❌ manquant (ORANGE_MONEY_CLIENT_SECRET)',
+                'Merchant Key' => env('ORANGE_MONEY_MERCHANT_KEY')  ? '✅ défini' : '❌ manquant (ORANGE_MONEY_MERCHANT_KEY)',
+                'Return URL'   => env('ORANGE_MONEY_RETURN_URL', '❌ manquant'),
+                'Notif URL'    => env('ORANGE_MONEY_NOTIF_URL',  '❌ manquant'),
+            ],
+            'mtnmomo' => [
+                'Subscription Key' => env('MTN_MOMO_SUBSCRIPTION_KEY') ? '✅ défini' : '❌ manquant (MTN_MOMO_SUBSCRIPTION_KEY)',
+                'API User'         => env('MTN_MOMO_API_USER')         ? '✅ défini' : '❌ manquant (MTN_MOMO_API_USER)',
+                'API Key'          => env('MTN_MOMO_API_KEY')          ? '✅ défini' : '❌ manquant (MTN_MOMO_API_KEY)',
+                'Environnement'    => env('MTN_MOMO_ENVIRONMENT', 'sandbox'),
+                'Currency'         => env('MTN_MOMO_CURRENCY', 'XOF'),
+            ],
+            'wave' => [
+                'API Key'      => env('WAVE_API_KEY')      ? '✅ défini' : '❌ manquant (WAVE_API_KEY)',
+                'Success URL'  => env('WAVE_SUCCESS_URL',  '❌ manquant'),
+                'Error URL'    => env('WAVE_ERROR_URL',    '❌ manquant'),
+                'Callback URL' => env('WAVE_CALLBACK_URL', '❌ manquant'),
+            ],
+            'cinetpay' => [
+                'API Key'    => env('CINETPAY_API_KEY')  ? '✅ défini' : '❌ manquant (CINETPAY_API_KEY)',
+                'Site ID'    => env('CINETPAY_SITE_ID')  ? '✅ défini' : '❌ manquant (CINETPAY_SITE_ID)',
+                'Notify URL' => env('CINETPAY_NOTIFY_URL', '❌ manquant'),
+                'Return URL' => env('CINETPAY_RETURN_URL', '❌ manquant'),
+            ],
+            'paydunya' => [
+                'Master Key'   => env('PAYDUNYA_MASTER_KEY')  ? '✅ défini' : '❌ manquant',
+                'Private Key'  => env('PAYDUNYA_PRIVATE_KEY') ? '✅ défini' : '❌ manquant',
+                'Token'        => env('PAYDUNYA_TOKEN')        ? '✅ défini' : '❌ manquant',
+                'Env'          => env('PAYDUNYA_ENV', 'test'),
+                'Store Name'   => env('PAYDUNYA_STORE_NAME', env('APP_NAME', 'Brikocode')),
+            ],
+            'stripe' => [
+                'Secret Key'      => env('STRIPE_SECRET_KEY')     ? '✅ défini' : '❌ manquant (STRIPE_SECRET_KEY)',
+                'Webhook Secret'  => env('STRIPE_WEBHOOK_SECRET') ? '✅ défini' : '— non défini (optionnel)',
+                'Success URL'     => env('STRIPE_SUCCESS_URL', '❌ manquant'),
+                'Cancel URL'      => env('STRIPE_CANCEL_URL',  '❌ manquant'),
+            ],
+            default => ['Mode' => 'log — Paiements simulés dans les logs, rien débité'],
+        };
+
+        foreach ($details as $k => $v) {
+            echo "    {$k} : {$v}\n";
+        }
+        echo "\n";
+    }
+
+    private function paymentVerify(?string $txId): void
+    {
+        if (!$txId) {
+            echo "  Usage : php briko payment:verify <transaction_id>\n";
+            return;
+        }
+
+        new \Briko\Foundation\App();
+
+        echo "\n  🔍 Vérification de la transaction {$txId}...\n";
+
+        $result = \Briko\Payment\Payment::verify($txId);
+
+        $icon = match ($result->status) {
+            'success'   => '✅',
+            'pending'   => '⏳',
+            'cancelled' => '🚫',
+            default     => '❌',
+        };
+
+        echo "  {$icon} Statut : {$result->status}\n";
+        echo "     Message : {$result->message}\n";
+        if ($result->amount > 0) {
+            echo "     Montant : {$result->amount} {$result->currency}\n";
+        }
+        echo "\n";
     }
 
     // ─── Migrations generator ────────────────────────────────────────────────

@@ -112,3 +112,12 @@ if (!function_exists('auth_check')) {
         return \Briko\Foundation\Auth::check();
     }
 }
+
+// ─── Payment ──────────────────────────────────────────────────────────────────
+
+if (!function_exists('pay')) {
+    function pay(int $amount): \Briko\Payment\PaymentMessage
+    {
+        return \Briko\Payment\Payment::amount($amount);
+    }
+}
