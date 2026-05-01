@@ -62,3 +62,53 @@ if (!function_exists('view')) {
         return ob_get_clean();
     }
 }
+
+// ─── Hash ─────────────────────────────────────────────────────────────────────
+
+if (!function_exists('bcrypt')) {
+    function bcrypt(string $value, int $rounds = 12): string
+    {
+        return \Briko\Foundation\Hash::make($value, $rounds);
+    }
+}
+
+// ─── Validation ───────────────────────────────────────────────────────────────
+
+if (!function_exists('validate')) {
+    function validate(array $data, array $rules): \Briko\Foundation\Validator
+    {
+        return \Briko\Foundation\Validator::make($data, $rules);
+    }
+}
+
+// ─── CSRF ─────────────────────────────────────────────────────────────────────
+
+if (!function_exists('csrf_token')) {
+    function csrf_token(): string
+    {
+        return \Briko\Http\Middleware\CsrfMiddleware::token();
+    }
+}
+
+if (!function_exists('csrf_field')) {
+    function csrf_field(): string
+    {
+        return '<input type="hidden" name="_token" value="' . csrf_token() . '">';
+    }
+}
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+
+if (!function_exists('auth_user')) {
+    function auth_user(): ?array
+    {
+        return \Briko\Foundation\Auth::user();
+    }
+}
+
+if (!function_exists('auth_check')) {
+    function auth_check(): bool
+    {
+        return \Briko\Foundation\Auth::check();
+    }
+}

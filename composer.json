@@ -23,7 +23,8 @@
       "Briko\\Mail\\":        "mail/",
       "Briko\\Console\\":     "console/",
       "Briko\\Foundation\\":  "foundation/",
-      "App\\":                "app/"
+      "App\\":                "app/",
+      "Database\\Seeders\\": "database/seeders/"
     },
     "files": [
       "foundation/helpers.php"

@@ -6,46 +6,63 @@ use Briko\Http\Middleware\Pipeline;
 
 class Router
 {
-    private array $routes = [];
+    private array  $routes          = [];
+    private string $currentPrefix   = '';
+    private array  $groupMiddlewares = [];
 
-    public function get(string $uri, $action, array $middlewares = []): void
+    // ─── Route registration ───────────────────────────────────────────────────
+
+    public function get(string $uri, mixed $action, array $middlewares = []): void
     {
         $this->add('GET', $uri, $action, $middlewares);
     }
 
-    public function post(string $uri, $action, array $middlewares = []): void
+    public function post(string $uri, mixed $action, array $middlewares = []): void
     {
         $this->add('POST', $uri, $action, $middlewares);
     }
 
-    public function put(string $uri, $action, array $middlewares = []): void
+    public function put(string $uri, mixed $action, array $middlewares = []): void
     {
         $this->add('PUT', $uri, $action, $middlewares);
     }
 
-    public function patch(string $uri, $action, array $middlewares = []): void
+    public function patch(string $uri, mixed $action, array $middlewares = []): void
     {
         $this->add('PATCH', $uri, $action, $middlewares);
     }
 
-    public function delete(string $uri, $action, array $middlewares = []): void
+    public function delete(string $uri, mixed $action, array $middlewares = []): void
     {
         $this->add('DELETE', $uri, $action, $middlewares);
     }
 
-    private function add(string $method, string $uri, $action, array $middlewares): void
+    // ─── Route groups ─────────────────────────────────────────────────────────
+
+    /**
+     * $attrs keys: 'prefix' (string), 'middleware' (array)
+     *
+     * $router->group(['prefix' => '/api/v1', 'middleware' => [AuthMiddleware::class]], function ($r) {
+     *     $r->get('/users', [UserController::class, 'index']);
+     * });
+     */
+    public function group(array $attrs, callable $fn): void
     {
-        $this->routes[] = [
-            'method'      => $method,
-            'uri'         => $uri,
-            'pattern'     => $this->toRegex($uri),
-            'params'      => $this->extractParams($uri),
-            'action'      => $action,
-            'middlewares' => $middlewares,
-        ];
+        $prevPrefix      = $this->currentPrefix;
+        $prevMiddlewares = $this->groupMiddlewares;
+
+        $this->currentPrefix    = $prevPrefix . ($attrs['prefix'] ?? '');
+        $this->groupMiddlewares = array_merge($prevMiddlewares, $attrs['middleware'] ?? []);
+
+        $fn($this);
+
+        $this->currentPrefix    = $prevPrefix;
+        $this->groupMiddlewares = $prevMiddlewares;
     }
 
-    public function dispatch(Request $request)
+    // ─── Dispatch ─────────────────────────────────────────────────────────────
+
+    public function dispatch(Request $request): mixed
     {
         $method = $request->method;
         $uri    = $request->uri;
@@ -63,7 +80,7 @@ class Router
             $action      = $route['action'];
             $middlewares = $route['middlewares'];
 
-            $destination = function ($req) use ($action) {
+            $destination = function (Request $req) use ($action): mixed {
                 if (is_callable($action)) {
                     return call_user_func($action, $req);
                 }
@@ -80,6 +97,22 @@ class Router
         }
 
         return ['error' => '404 - Route non trouvée', 'code' => 404];
+    }
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+
+    private function add(string $method, string $uri, mixed $action, array $middlewares): void
+    {
+        $fullUri = $this->currentPrefix . $uri;
+
+        $this->routes[] = [
+            'method'      => $method,
+            'uri'         => $fullUri,
+            'pattern'     => $this->toRegex($fullUri),
+            'params'      => $this->extractParams($fullUri),
+            'action'      => $action,
+            'middlewares' => array_merge($this->groupMiddlewares, $middlewares),
+        ];
     }
 
     private function toRegex(string $uri): string

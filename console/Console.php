@@ -72,6 +72,21 @@ class Console
             case 'env:setup':
                 $this->envSetup();
                 break;
+            case 'fabrique:migration':
+                $this->makeMigration($argv[2] ?? 'nouvelle_migration');
+                break;
+            case 'fabrique:seeder':
+                $this->makeSeeder($argv[2] ?? 'DatabaseSeeder');
+                break;
+            case 'db:seed':
+                $class = null;
+                foreach ($argv as $arg) {
+                    if (str_starts_with($arg, '--class=')) {
+                        $class = substr($arg, 8);
+                    }
+                }
+                $this->dbSeed($class);
+                break;
             case 'help':
             default:
                 $this->help();
@@ -105,6 +120,9 @@ class Console
         echo "    php briko mail:driver                  Voir le driver Mail actif\n";
         echo "    php briko fabrique:mail <Nom>          Créer un Mailable\n\n";
         echo "    php briko env:setup                    Créer .env depuis .env.example\n\n";
+        echo "    php briko fabrique:migration <nom>     Créer un fichier de migration\n";
+        echo "    php briko fabrique:seeder <Nom>        Créer un Seeder\n";
+        echo "    php briko db:seed [--class=<Nom>]      Exécuter les seeders\n\n";
         echo "    php briko help                         Afficher cette aide\n\n";
     }
 
@@ -848,6 +866,135 @@ class Console
         echo "✅ Mailable créé     : app/mailables/{$name}Mail.php\n";
         echo "\n  Utilisation :\n";
         echo "    Mail::send(new {$name}Mail(['email' => 'user@ci.ci']));\n\n";
+    }
+
+    // ─── Migrations generator ────────────────────────────────────────────────
+
+    private function makeMigration(string $name): void
+    {
+        $name  = preg_replace('/[^A-Za-z0-9_]/', '_', trim($name));
+        $stamp = date('Y_m_d_His');
+        $dir   = base_path('database/migrations');
+
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        $file = $dir . "/{$stamp}_{$name}.php";
+
+        $tpl = "<?php\n\nreturn [\n"
+            . "    'up' => function (\\PDO \$pdo): void {\n"
+            . "        \$pdo->exec(\"\n"
+            . "            CREATE TABLE IF NOT EXISTS `{$name}` (\n"
+            . "                `id`         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,\n"
+            . "                `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n"
+            . "                `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP\n"
+            . "            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4\n"
+            . "        \");\n"
+            . "    },\n\n"
+            . "    'down' => function (\\PDO \$pdo): void {\n"
+            . "        \$pdo->exec('DROP TABLE IF EXISTS `{$name}`');\n"
+            . "    },\n"
+            . "];\n";
+
+        file_put_contents($file, $tpl);
+        echo "✅ Migration créée : database/migrations/{$stamp}_{$name}.php\n";
+    }
+
+    // ─── Seeders ─────────────────────────────────────────────────────────────
+
+    private function makeSeeder(string $name): void
+    {
+        $name = preg_replace('/[^A-Za-z0-9_]/', '', $name);
+        $dir  = base_path('database/seeders');
+
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        $path = $dir . '/' . $name . '.php';
+
+        if (file_exists($path)) {
+            echo "⚠️  Seeder déjà existant : {$name}\n";
+            return;
+        }
+
+        $tpl = "<?php\nnamespace Database\\Seeders;\n\n"
+            . "use Briko\\Database\\Seeder;\n"
+            . "use Briko\\Database\\DB;\n\n"
+            . "class {$name} extends Seeder\n{\n"
+            . "    public function run(): void\n"
+            . "    {\n"
+            . "        DB::table('table_name')->insert([\n"
+            . "            'colonne' => 'valeur',\n"
+            . "        ]);\n"
+            . "    }\n"
+            . "}\n";
+
+        file_put_contents($path, $tpl);
+        echo "✅ Seeder créé : database/seeders/{$name}.php\n";
+    }
+
+    private function dbSeed(?string $class): void
+    {
+        new \Briko\Foundation\App();
+
+        $dir = base_path('database/seeders');
+
+        if (!is_dir($dir)) {
+            echo "❌ Aucun dossier database/seeders trouvé.\n";
+            echo "   Crée-en un avec : php briko fabrique:seeder DatabaseSeeder\n";
+            return;
+        }
+
+        if ($class) {
+            $file = $dir . '/' . $class . '.php';
+            if (!file_exists($file)) {
+                echo "❌ Seeder introuvable : {$class}\n";
+                return;
+            }
+            $this->runSeederFile($file, $class);
+            return;
+        }
+
+        // DatabaseSeeder en priorité, sinon tous
+        $default = $dir . '/DatabaseSeeder.php';
+        if (file_exists($default)) {
+            $this->runSeederFile($default, 'DatabaseSeeder');
+            return;
+        }
+
+        $files = glob($dir . '/*.php') ?: [];
+        if (empty($files)) {
+            echo "⚠️  Aucun seeder trouvé dans database/seeders/\n";
+            return;
+        }
+
+        echo "\n  🌱 Seeding...\n";
+        foreach ($files as $file) {
+            $this->runSeederFile($file, basename($file, '.php'));
+        }
+        echo "\n  ✅ Terminé.\n\n";
+    }
+
+    private function runSeederFile(string $file, string $shortName): void
+    {
+        require_once $file;
+
+        $fqn = "Database\\Seeders\\{$shortName}";
+
+        if (!class_exists($fqn)) {
+            echo "  ❌ Classe introuvable : {$fqn}\n";
+            return;
+        }
+
+        echo "  → Seeding {$shortName}... ";
+        try {
+            (new $fqn())->run();
+            echo "✅\n";
+        } catch (\Throwable $e) {
+            echo "❌ {$e->getMessage()}\n";
+        }
     }
 
     private function envSetup(): void
