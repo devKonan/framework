@@ -283,6 +283,7 @@ td code{font-size:.78rem}
     <div class="sidebar-group">Services</div>
     <a href="#" data-section="sms">SMS & OTP</a>
     <a href="#" data-section="mail">Mail</a>
+    <a href="#" data-section="payment">💳 Payment</a>
     <a href="#" data-section="logging">Logging</a>
     <a href="#" data-section="offline">Offline-First</a>
   </div>
@@ -1974,6 +1975,427 @@ php briko sync:flush     # Vider la file d'attente</code></pre>
   </div>
 </section>
 
+<!-- ═══════════════════════ PAYMENT ═══════════════════════ -->
+<section class="doc-section" id="sec-payment">
+  <div class="breadcrumb">Docs <span>›</span> Payment</div>
+  <span class="section-badge">Services</span>
+  <h1>Payment — Mobile Money & Paiements</h1>
+  <p class="lead">Module de paiement driver-based : Orange Money, MTN MoMo, Wave, CinetPay, PayDunya, Stripe. Une API unifiée — tu changes le provider dans <code>.env</code>, zéro modification de code.</p>
+
+  <!-- ── PROVIDERS ─────────────────────────────────────────────────────── -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.6rem;margin-bottom:2rem">
+    <div style="background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:.75rem;text-align:center">
+      <div style="font-size:1.3rem">🟠</div>
+      <strong style="color:#fff;font-size:.85rem">Orange Money</strong>
+      <div style="font-size:.75rem;color:var(--muted2)">CI · SN · CM</div>
+    </div>
+    <div style="background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:.75rem;text-align:center">
+      <div style="font-size:1.3rem">🟡</div>
+      <strong style="color:#fff;font-size:.85rem">MTN MoMo</strong>
+      <div style="font-size:.75rem;color:var(--muted2)">Multi-pays MTN</div>
+    </div>
+    <div style="background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:.75rem;text-align:center">
+      <div style="font-size:1.3rem">🌊</div>
+      <strong style="color:#fff;font-size:.85rem">Wave</strong>
+      <div style="font-size:.75rem;color:var(--muted2)">CI · SN</div>
+    </div>
+    <div style="background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:.75rem;text-align:center">
+      <div style="font-size:1.3rem">🔵</div>
+      <strong style="color:#fff;font-size:.85rem">CinetPay</strong>
+      <div style="font-size:.75rem;color:var(--muted2)">8 pays Afrique</div>
+    </div>
+    <div style="background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:.75rem;text-align:center">
+      <div style="font-size:1.3rem">🟢</div>
+      <strong style="color:#fff;font-size:.85rem">PayDunya</strong>
+      <div style="font-size:.75rem;color:var(--muted2)">SN · ML · BF · CI</div>
+    </div>
+    <div style="background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:.75rem;text-align:center">
+      <div style="font-size:1.3rem">💜</div>
+      <strong style="color:#fff;font-size:.85rem">Stripe</strong>
+      <div style="font-size:.75rem;color:var(--muted2)">International</div>
+    </div>
+  </div>
+
+  <!-- ── CONFIGURATION ─────────────────────────────────────────────────── -->
+  <h2>Configuration</h2>
+  <p>Dans <code>.env</code>, choisis ton provider et renseigne ses clés. Le code de ton app ne change pas.</p>
+
+  <div class="code-label"><span>.env</span></div>
+  <pre><code class="language-bash">PAYMENT_DRIVER=cinetpay   # log | orangemoney | mtnmomo | wave | cinetpay | paydunya | stripe
+PAYMENT_CURRENCY=XOF</code></pre>
+
+  <h3>Orange Money CI</h3>
+  <p>Obtiens tes clés sur <strong>developer.orange.com</strong> → API Orange Money Web Payment.</p>
+  <div class="code-label"><span>.env</span></div>
+  <pre><code class="language-bash">PAYMENT_DRIVER=orangemoney
+ORANGE_MONEY_CLIENT_ID=ton_client_id
+ORANGE_MONEY_CLIENT_SECRET=ton_client_secret
+ORANGE_MONEY_MERCHANT_KEY=ta_merchant_key
+ORANGE_MONEY_RETURN_URL=https://ton-site.ci/paiement/retour
+ORANGE_MONEY_CANCEL_URL=https://ton-site.ci/paiement/annule
+ORANGE_MONEY_NOTIF_URL=https://ton-site.ci/webhooks/payment</code></pre>
+
+  <h3>MTN Mobile Money</h3>
+  <p>Obtiens tes clés sur <strong>momodeveloper.mtn.com</strong>. En sandbox, crée un API User via le portail.</p>
+  <div class="code-label"><span>.env</span></div>
+  <pre><code class="language-bash">PAYMENT_DRIVER=mtnmomo
+MTN_MOMO_SUBSCRIPTION_KEY=ta_subscription_key
+MTN_MOMO_API_USER=uuid_api_user
+MTN_MOMO_API_KEY=ta_api_key
+MTN_MOMO_ENVIRONMENT=sandbox          # sandbox | production
+MTN_MOMO_CURRENCY=XOF
+MTN_MOMO_CALLBACK_URL=https://ton-site.ci/webhooks/payment</code></pre>
+
+  <h3>Wave</h3>
+  <p>Obtiens ta clé sur <strong>wave.com/business</strong> → API.</p>
+  <div class="code-label"><span>.env</span></div>
+  <pre><code class="language-bash">PAYMENT_DRIVER=wave
+WAVE_API_KEY=ta_cle_secrete
+WAVE_SUCCESS_URL=https://ton-site.ci/paiement/succes
+WAVE_ERROR_URL=https://ton-site.ci/paiement/erreur
+WAVE_CALLBACK_URL=https://ton-site.ci/webhooks/payment</code></pre>
+
+  <h3>CinetPay — 8 pays africains</h3>
+  <p>Obtiens tes clés sur <strong>cinetpay.com</strong> → Dashboard → Mes applications. Couvre CI, SN, CM, BF, ML, TG, GN, MG.</p>
+  <div class="code-label"><span>.env</span></div>
+  <pre><code class="language-bash">PAYMENT_DRIVER=cinetpay
+CINETPAY_API_KEY=ta_api_key
+CINETPAY_SITE_ID=ton_site_id
+CINETPAY_NOTIFY_URL=https://ton-site.ci/webhooks/payment
+CINETPAY_RETURN_URL=https://ton-site.ci/paiement/retour</code></pre>
+
+  <h3>PayDunya — Sénégal, Mali, Burkina, CI</h3>
+  <p>Obtiens tes clés sur <strong>paydunya.com/developers</strong>.</p>
+  <div class="code-label"><span>.env</span></div>
+  <pre><code class="language-bash">PAYMENT_DRIVER=paydunya
+PAYDUNYA_MASTER_KEY=ta_master_key
+PAYDUNYA_PRIVATE_KEY=ta_private_key
+PAYDUNYA_TOKEN=ton_token
+PAYDUNYA_STORE_NAME=Mon App
+PAYDUNYA_ENV=test                     # test | live
+PAYDUNYA_RETURN_URL=https://ton-site.ci/paiement/retour
+PAYDUNYA_CANCEL_URL=https://ton-site.ci/paiement/annule
+PAYDUNYA_CALLBACK_URL=https://ton-site.ci/webhooks/payment</code></pre>
+
+  <h3>Stripe — International</h3>
+  <p>Obtiens ta clé sur <strong>dashboard.stripe.com</strong> → Développeurs → Clés API.</p>
+  <div class="code-label"><span>.env</span></div>
+  <pre><code class="language-bash">PAYMENT_DRIVER=stripe
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...       # optionnel mais recommandé
+STRIPE_SUCCESS_URL=https://ton-site.ci/paiement/succes
+STRIPE_CANCEL_URL=https://ton-site.ci/paiement/annule</code></pre>
+
+  <!-- ── USAGE ─────────────────────────────────────────────────────────── -->
+  <h2>Initier un paiement</h2>
+  <p>L'helper <code>pay()</code> retourne un <code>PaymentMessage</code> fluent. L'API est identique quel que soit le provider.</p>
+
+  <div class="code-label"><span>PHP</span></div>
+  <pre><code class="language-php">$result = pay(5000)                          // montant en FCFA
+    ->to('+2250701234567')                   // numéro à débiter (MoMo push) ou client (redirection)
+    ->description('Commande #42')
+    ->reference('ORDER-42')                  // ID unique, auto-généré si omis
+    ->send();
+
+// Providers à redirection (Orange, Wave, CinetPay, PayDunya, Stripe)
+if ($result->isPending() && $result->paymentUrl) {
+    header('Location: ' . $result->paymentUrl);
+    exit;
+}
+
+// MTN MoMo (push direct sur le téléphone)
+if ($result->isPending()) {
+    return ['message' => 'Confirme le paiement sur ton téléphone MTN.'];
+}
+
+if ($result->isFailed()) {
+    return ['error' => $result->message];
+}</code></pre>
+
+  <h3>Options avancées</h3>
+  <div class="code-label"><span>PHP</span></div>
+  <pre><code class="language-php">pay(10000)
+    ->to('+2250701234567')
+    ->email('client@email.ci')        // email du client (Stripe, CinetPay)
+    ->name('Koné Amadou')             // nom complet du client
+    ->description('Abonnement Pro')
+    ->reference('SUB-2026-001')
+    ->currency('XOF')                 // défaut : PAYMENT_CURRENCY dans .env
+    ->returnUrl('https://...')        // surcharge RETURN_URL du .env
+    ->cancelUrl('https://...')        // surcharge CANCEL_URL du .env
+    ->callbackUrl('https://...')      // surcharge NOTIFY_URL du .env
+    ->meta(['user_id' => 42])         // données personnalisées (stockées dans raw)
+    ->send();</code></pre>
+
+  <!-- ── PAYMENT RESULT ──────────────────────────────────────────────── -->
+  <h2>PaymentResult</h2>
+  <table>
+    <thead><tr><th>Propriété</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>$result->success</code></td><td>bool</td><td>true si initiation réussie (même si paiement encore en attente)</td></tr>
+      <tr><td><code>$result->status</code></td><td>string</td><td><code>pending</code> | <code>success</code> | <code>failed</code> | <code>cancelled</code></td></tr>
+      <tr><td><code>$result->transactionId</code></td><td>string</td><td>ID de transaction retourné par le provider</td></tr>
+      <tr><td><code>$result->paymentUrl</code></td><td>?string</td><td>URL de redirection (Orange, Wave, CinetPay, PayDunya, Stripe)</td></tr>
+      <tr><td><code>$result->amount</code></td><td>int</td><td>Montant de la transaction</td></tr>
+      <tr><td><code>$result->currency</code></td><td>string</td><td>Devise (XOF, USD, EUR…)</td></tr>
+      <tr><td><code>$result->message</code></td><td>string</td><td>Message lisible (succès ou erreur)</td></tr>
+      <tr><td><code>$result->raw</code></td><td>array</td><td>Réponse brute de l'API provider</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-label"><span>PHP — méthodes helper</span></div>
+  <pre><code class="language-php">$result->isOk()      // true si success ou pending (initiation OK)
+$result->isPending() // true si en attente de confirmation
+$result->isFailed()  // true si échec</code></pre>
+
+  <!-- ── VÉRIFICATION ───────────────────────────────────────────────── -->
+  <h2>Vérifier une transaction</h2>
+  <p>Après une redirection retour ou un délai, vérifie l'état réel de la transaction.</p>
+
+  <div class="code-label"><span>PHP</span></div>
+  <pre><code class="language-php">use Briko\Payment\Payment;
+
+$result = Payment::verify('CP-TXN123456');
+
+if ($result->isOk()) {
+    // Mettre à jour la commande en BDD
+    db('orders')->where('ref', 'ORDER-42')->update(['status' => 'paid']);
+}</code></pre>
+
+  <!-- ── WEBHOOKS ──────────────────────────────────────────────────── -->
+  <h2>Webhooks — callbacks asynchrones</h2>
+  <p>Les providers envoient un POST sur ton URL de notification quand le paiement est confirmé. Le <code>WebhookHandler</code> normalise automatiquement le payload quel que soit le provider.</p>
+
+  <div class="code-label"><span>app/routes.php</span></div>
+  <pre><code class="language-php">use Briko\Payment\WebhookHandler;
+
+$router->post('/webhooks/payment', function ($request) {
+    $result = WebhookHandler::handle($request->body());
+
+    if ($result->isOk()) {
+        // Commande payée — mets à jour ta BDD
+        db('orders')
+            ->where('ref', $result->transactionId)
+            ->update(['status' => 'paid', 'paid_at' => date('Y-m-d H:i:s')]);
+
+        // Envoie un SMS de confirmation
+        sms($request->body()['phone'] ?? '')
+            ->send('Paiement reçu ✅. Merci !');
+    }
+
+    return ['ok' => true];  // Toujours répondre 200 au provider
+});</code></pre>
+
+  <h3>Vérification signature Stripe</h3>
+  <div class="code-label"><span>app/routes.php</span></div>
+  <pre><code class="language-php">$router->post('/webhooks/stripe', function ($request) {
+    $rawBody = file_get_contents('php://input');
+    $sig     = $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '';
+
+    if (!WebhookHandler::verifyStripeSignature($rawBody, $sig)) {
+        http_response_code(400);
+        return ['error' => 'Signature invalide'];
+    }
+
+    $result = WebhookHandler::handle($request->body(), 'stripe');
+    // ... traitement
+    return ['ok' => true];
+});</code></pre>
+
+  <!-- ── EXEMPLE COMPLET ────────────────────────────────────────────── -->
+  <h2>Exemple complet — Controller Checkout</h2>
+
+  <div class="code-label"><span>app/controllers/CheckoutController.php</span></div>
+  <pre><code class="language-php"><?php
+namespace App\Controllers;
+
+use Briko\Http\Request;
+use Briko\Http\Response;
+use Briko\Foundation\Validator;
+use Briko\Payment\Payment;
+use Briko\Payment\WebhookHandler;
+
+class CheckoutController
+{
+    // POST /checkout — initier le paiement
+    public function initiate(Request $request): void
+    {
+        $v = validate($request->all(), [
+            'amount' => 'required|numeric|min:100',
+            'phone'  => 'required',
+        ]);
+
+        if ($v->fails()) {
+            Response::json(['errors' => $v->errors()], 422);
+            return;
+        }
+
+        $orderId = 'ORDER-' . time();
+
+        // Sauvegarder la commande en attente
+        db('orders')->insert([
+            'ref'    => $orderId,
+            'amount' => $request->input('amount'),
+            'status' => 'pending',
+        ]);
+
+        $result = pay((int) $request->input('amount'))
+            ->to($request->input('phone'))
+            ->description('Commande ' . $orderId)
+            ->reference($orderId)
+            ->send();
+
+        if ($result->isFailed()) {
+            Response::json(['error' => $result->message], 400);
+            return;
+        }
+
+        // Provider à redirection (CinetPay, Orange, Wave…)
+        if ($result->paymentUrl) {
+            Response::json([
+                'status'      => 'redirect',
+                'payment_url' => $result->paymentUrl,
+                'tx_id'       => $result->transactionId,
+            ]);
+            return;
+        }
+
+        // MTN MoMo (push mobile)
+        Response::json([
+            'status'  => 'pending',
+            'message' => $result->message,
+            'tx_id'   => $result->transactionId,
+        ]);
+    }
+
+    // GET /checkout/verify?tx_id=... — vérification manuelle
+    public function verify(Request $request): array
+    {
+        $txId  = $request->input('tx_id');
+        $result = Payment::verify($txId);
+
+        if ($result->isOk()) {
+            db('orders')->where('ref', $txId)->update(['status' => 'paid']);
+        }
+
+        return [
+            'status'  => $result->status,
+            'message' => $result->message,
+        ];
+    }
+
+    // POST /webhooks/payment — appelé par le provider
+    public function webhook(Request $request): array
+    {
+        $result = WebhookHandler::handle($request->body());
+
+        if ($result->isOk()) {
+            db('orders')
+                ->where('ref', $result->transactionId)
+                ->update(['status' => 'paid', 'paid_at' => date('Y-m-d H:i:s')]);
+        }
+
+        return ['ok' => true];
+    }
+}</code></pre>
+
+  <div class="code-label"><span>app/routes.php</span></div>
+  <pre><code class="language-php">use App\Controllers\CheckoutController;
+
+$router->post('/checkout',         [CheckoutController::class, 'initiate']);
+$router->get('/checkout/verify',   [CheckoutController::class, 'verify']);
+$router->post('/webhooks/payment', [CheckoutController::class, 'webhook']);</code></pre>
+
+  <!-- ── CLI ─────────────────────────────────────────────────────────── -->
+  <h2>Commandes CLI Payment</h2>
+  <table>
+    <thead><tr><th>Commande</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>php briko payment:driver</code></td><td>Affiche le driver actif et vérifie les clés .env</td></tr>
+      <tr><td><code>php briko payment:test &lt;tel&gt; [montant]</code></td><td>Teste un paiement en sandbox</td></tr>
+      <tr><td><code>php briko payment:verify &lt;txId&gt;</code></td><td>Vérifie l'état d'une transaction</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-label"><span>Terminal</span></div>
+  <pre><code class="language-bash"># Vérifier la configuration du driver actif
+php briko payment:driver
+
+# Tester un paiement de 2500 XOF (utilise le driver .env)
+php briko payment:test +2250701234567 2500
+
+# Vérifier une transaction existante
+php briko payment:verify CP-TXN123ABC</code></pre>
+
+  <!-- ── TABLEAU COMPARATIF ─────────────────────────────────────────── -->
+  <h2>Comparatif des providers</h2>
+  <table>
+    <thead><tr><th>Provider</th><th>Pays</th><th>Flux</th><th>Sandbox</th><th>Portail</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Orange Money</strong></td>
+        <td>CI, SN, CM…</td>
+        <td>Redirection</td>
+        <td>✅</td>
+        <td>developer.orange.com</td>
+      </tr>
+      <tr>
+        <td><strong>MTN MoMo</strong></td>
+        <td>Multi-pays MTN</td>
+        <td>Push mobile (async)</td>
+        <td>✅</td>
+        <td>momodeveloper.mtn.com</td>
+      </tr>
+      <tr>
+        <td><strong>Wave</strong></td>
+        <td>CI, SN</td>
+        <td>Redirection</td>
+        <td>✅</td>
+        <td>wave.com/business</td>
+      </tr>
+      <tr>
+        <td><strong>CinetPay</strong></td>
+        <td>CI, SN, CM, BF, ML, TG, GN, MG</td>
+        <td>Redirection</td>
+        <td>✅</td>
+        <td>cinetpay.com</td>
+      </tr>
+      <tr>
+        <td><strong>PayDunya</strong></td>
+        <td>SN, ML, BF, CI</td>
+        <td>Redirection</td>
+        <td>✅</td>
+        <td>paydunya.com/developers</td>
+      </tr>
+      <tr>
+        <td><strong>Stripe</strong></td>
+        <td>International</td>
+        <td>Redirection (page Stripe)</td>
+        <td>✅</td>
+        <td>dashboard.stripe.com</td>
+      </tr>
+      <tr>
+        <td><strong>Log</strong></td>
+        <td>—</td>
+        <td>Simulé (logs uniquement)</td>
+        <td>✅</td>
+        <td>aucun portail requis</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="page-nav">
+    <a href="#" class="pn-prev" onclick="nav('mail');return false">
+      <span class="pn-label">← Précédent</span>
+      <span class="pn-title">Mail</span>
+    </a>
+    <a href="#" class="pn-next" onclick="nav('logging');return false">
+      <span class="pn-label">Suivant →</span>
+      <span class="pn-title">Logging</span>
+    </a>
+  </div>
+</section>
+
 <!-- ═══════════════════════ CLI ═══════════════════════ -->
 <section class="doc-section" id="sec-cli">
   <div class="breadcrumb">Docs <span>›</span> CLI</div>
@@ -2002,9 +2424,15 @@ php briko sync:flush     # Vider la file d'attente</code></pre>
       <tr><td><code>php briko sms:driver</code></td><td>Afficher la config SMS active</td></tr>
       <tr><td><code>php briko mail:test &lt;email&gt;</code></td><td>Envoyer un email de test</td></tr>
       <tr><td><code>php briko mail:driver</code></td><td>Afficher la config Mail active</td></tr>
+      <tr><td><code>php briko payment:driver</code></td><td>Afficher la config Payment active et vérifier les clés</td></tr>
+      <tr><td><code>php briko payment:test &lt;tel&gt; [montant]</code></td><td>Tester un paiement en sandbox</td></tr>
+      <tr><td><code>php briko payment:verify &lt;txId&gt;</code></td><td>Vérifier l'état d'une transaction</td></tr>
       <tr><td><code>php briko fabrique:controller &lt;Nom&gt;</code></td><td>Créer un controller REST</td></tr>
       <tr><td><code>php briko fabrique:model &lt;Nom&gt;</code></td><td>Créer un modèle</td></tr>
       <tr><td><code>php briko fabrique:mail &lt;Nom&gt;</code></td><td>Créer un Mailable + template</td></tr>
+      <tr><td><code>php briko fabrique:migration &lt;nom&gt;</code></td><td>Créer un fichier de migration</td></tr>
+      <tr><td><code>php briko fabrique:seeder &lt;Nom&gt;</code></td><td>Créer un Seeder</td></tr>
+      <tr><td><code>php briko db:seed [--class=Nom]</code></td><td>Exécuter les seeders</td></tr>
       <tr><td><code>php briko help</code></td><td>Afficher l'aide</td></tr>
     </tbody>
   </table>
